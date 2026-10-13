@@ -1,0 +1,17 @@
+{
+  "name": "studyflow-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:services": "node scripts/check-services.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@google/genai": "^2.29.0",
+    "mongoose": "^9.11.2",
+    "zod": "^4.6.7"
+  }
+}

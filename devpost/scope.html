@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyFlow Scope</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --text: #1d2330; --muted: #5b6475;
+    --line: #dcdfe6; --accent: #3b5bdb; --accent-soft: #e7ecff;
+    --now: #2b8a3e; --now-soft: #e6f4ea; --later: #b7791f; --later-soft: #fdf3dc;
+    --cut: #6b7280; --cut-soft: #eceef2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171f; --surface: #1c2030; --text: #e8eaf0; --muted: #a0a8b8;
+      --line: #2e3446; --accent: #8fa6ff; --accent-soft: #252c4d;
+      --now: #7bd88f; --now-soft: #1c3326; --later: #f0c36d; --later-soft: #3a2f17;
+      --cut: #a0a8b8; --cut-soft: #262a38;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+         text-transform: uppercase; padding: 3px 10px; border-radius: 99px;
+         background: var(--accent-soft); color: var(--accent); }
+  h1 { font-size: 2rem; margin: 12px 0 6px; line-height: 1.2; }
+  .lede { color: var(--muted); font-size: 1.05rem; margin: 0 0 28px; }
+  section { margin: 0 0 28px; }
+  h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card p { margin: 0 0 8px; } .card p:last-child { margin: 0; }
+  .kernel { border-left: 4px solid var(--accent); }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { fill: var(--text); font-family: inherit; font-size: 13px; }
+  svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  svg .hot { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  svg .arrow { stroke: var(--muted); stroke-width: 1.8; fill: none; }
+  svg .loop { stroke: var(--accent); stroke-width: 2; fill: none; stroke-dasharray: 5 4; }
+  svg .small { font-size: 11.5px; fill: var(--muted); }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+            margin-bottom: 10px; overflow: hidden; }
+  summary { cursor: pointer; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  summary::marker { color: var(--muted); }
+  .pill { font-size: 11px; padding: 2px 9px; border-radius: 99px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .now .pill { background: var(--now-soft); color: var(--now); }
+  .later .pill { background: var(--later-soft); color: var(--later); }
+  .cut .pill { background: var(--cut-soft); color: var(--cut); }
+  details ul { margin: 0; padding: 0 16px 14px 36px; }
+  details p { margin: 0; padding: 0 16px 14px; }
+  li { margin: 4px 0; }
+  ol.steps { margin: 0; padding-left: 22px; }
+  footer { color: var(--muted); font-size: 13px; margin-top: 36px; }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Scope &middot; approved</span>
+  <h1>StudyFlow <span style="color:var(--muted);font-weight:400;font-size:1rem">(working name)</span></h1>
+  <p class="lede">An AI study planner for university students that builds a day-by-day timetable before exams, then replans automatically when the student falls behind.</p>
+
+  <section>
+    <h2>The unique kernel</h2>
+    <div class="card kernel">
+      <p>The AI does the planning <strong>and</strong> the replanning. When something isn't finished, the plan adjusts itself and shows a short <strong>"what moved and why"</strong> note, for example <em>"Chapter 4 moved to Thursday because Tuesday's session was only half done."</em> The student can see and trust the AI's reasoning.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Who it's for</h2>
+    <div class="card">
+      <p>University students with a lot of material to cover before exams. Today it's hard for them to keep a timetable going, and a plan made once falls apart the first time a day goes wrong.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The core loop</h2>
+    <div class="card">
+      <svg viewBox="0 0 720 300" role="img" aria-label="Diagram of the core loop: the student enters courses and exam details, the AI builds a timetable, the student checks in daily, the AI replans and explains what moved, and the loop returns to the daily check-in.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+          </marker>
+          <marker id="ahb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+        <rect class="box" x="10" y="20" width="200" height="90" rx="12"/>
+        <text x="110" y="48" text-anchor="middle" font-weight="700">1. Student sets up</text>
+        <text class="small" x="110" y="68" text-anchor="middle">courses, topics, difficulty,</text>
+        <text class="small" x="110" y="84" text-anchor="middle">exam dates, hours needed</text>
+
+        <rect class="hot" x="260" y="20" width="200" height="90" rx="12"/>
+        <text x="360" y="48" text-anchor="middle" font-weight="700">2. AI builds timetable</text>
+        <text class="small" x="360" y="68" text-anchor="middle">what to study,</text>
+        <text class="small" x="360" y="84" text-anchor="middle">when, and how much</text>
+
+        <rect class="box" x="510" y="20" width="200" height="90" rx="12"/>
+        <text x="610" y="48" text-anchor="middle" font-weight="700">3. Daily check-in</text>
+        <text class="small" x="610" y="68" text-anchor="middle">done / partly done (hours) /</text>
+        <text class="small" x="610" y="84" text-anchor="middle">untouched</text>
+
+        <rect class="hot" x="510" y="190" width="200" height="90" rx="12"/>
+        <text x="610" y="218" text-anchor="middle" font-weight="700">4. AI replans</text>
+        <text class="small" x="610" y="238" text-anchor="middle">rest of the plan reshuffles,</text>
+        <text class="small" x="610" y="254" text-anchor="middle">"what moved and why"</text>
+
+        <rect class="box" x="10" y="190" width="200" height="90" rx="12"/>
+        <text x="110" y="218" text-anchor="middle" font-weight="700">Proof (demo)</text>
+        <text class="small" x="110" y="238" text-anchor="middle">log in, enter courses, mark a</text>
+        <text class="small" x="110" y="254" text-anchor="middle">day partly done, watch it replan</text>
+
+        <line class="arrow" x1="210" y1="65" x2="258" y2="65" marker-end="url(#ah)"/>
+        <line class="arrow" x1="460" y1="65" x2="508" y2="65" marker-end="url(#ah)"/>
+        <line class="arrow" x1="610" y1="110" x2="610" y2="188" marker-end="url(#ah)"/>
+        <path class="loop" d="M510,235 C400,235 400,150 400,112" marker-end="url(#ahb)"/>
+        <text class="small" x="330" y="180" text-anchor="end" style="fill:var(--accent)">next day's plan</text>
+        <line class="arrow" x1="508" y1="235" x2="212" y2="235" stroke-dasharray="2 5" opacity="0"/>
+      </svg>
+      <p class="small" style="color:var(--muted);font-size:13px;margin-top:10px">They come back each day because the plan is always current, and falling behind doesn't mean starting over.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The steps in words</h2>
+    <div class="card">
+      <ol class="steps">
+        <li>The student logs in and enters courses, what to cover, difficulty, exam dates and required hours.</li>
+        <li>The AI builds a detailed timetable.</li>
+        <li>After each day the student marks items <strong>completed</strong>, <strong>partially completed</strong> or <strong>untouched</strong>.</li>
+        <li>For partial items, the system asks only <em>how many hours were studied</em> and works out what's left. An optional "still need more time on this" tick covers the rest.</li>
+        <li>The AI replans the remaining schedule and explains what moved and why.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>What "working" looks like</h2>
+    <div class="card">
+      <p>A student logs in with a username and password, enters their courses and exam details, and gets a timetable. They mark a day as partly done and enter the hours studied. The plan changes in front of them, with a clear note on what moved and why. It works on both phone and desktop.</p>
+      <p><strong>The "oh, that's cool" beat:</strong> the timetable visibly reshuffles itself and explains why.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Now, later, cut</h2>
+    <details class="now" open>
+      <summary><span class="pill">Now</span> The proof-of-concept boundary</summary>
+      <ul>
+        <li>Simple login with username and password</li>
+        <li>Entering courses, topics, difficulty, exam dates, required hours</li>
+        <li>AI-generated detailed timetable</li>
+        <li>Daily check-in: completed / partial (hours studied, optional "needs more time") / untouched</li>
+        <li>Automatic replanning with a "what moved and why" explanation</li>
+        <li>Responsive layout for mobile and web</li>
+      </ul>
+    </details>
+    <details class="later">
+      <summary><span class="pill">Later</span> Worth doing, just not now</summary>
+      <ul>
+        <li>Calendar sync</li>
+        <li>Notifications and reminders</li>
+        <li>Sharing or studying with classmates</li>
+      </ul>
+    </details>
+    <details class="cut">
+      <summary><span class="pill">Cut</span> Explicitly cut</summary>
+      <p>Nothing is formally cut yet. You said the scope may change and you'll say so if it does.</p>
+    </details>
+  </section>
+
+  <section>
+    <h2>Why this matters to you</h2>
+    <div class="card">
+      <p>You want to build something for students, and to master AI agents "so that I can build whatever I want later on efficiently."</p>
+    </div>
+  </section>
+
+  <footer>Companion to <code>devpost/scope.md</code>, which stays the canonical version. Identity and look-and-feel haven't been set yet; the PRD picks that up.</footer>
+</main>
+</body>
+</html>

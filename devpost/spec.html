@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyFlow Technical Spec</title>
+<style>
+  :root {
+    --bg: #f6f4ee; --card: #ffffff; --ink: #2b3a3a; --muted: #6b7a78;
+    --accent: #5b9a8b; --accent-soft: #e0efeb; --warm: #e9a96b; --warm-soft: #fbeedd;
+    --line: #d9e0dd; --radius: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #172220; --card: #1f2e2c; --ink: #e8efed; --muted: #9db0ac;
+      --accent: #7cc2b2; --accent-soft: #28403c; --warm: #e9a96b; --warm-soft: #3b3022;
+      --line: #35504b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #172220; --card: #1f2e2c; --ink: #e8efed; --muted: #9db0ac;
+    --accent: #7cc2b2; --accent-soft: #28403c; --warm: #e9a96b; --warm-soft: #3b3022;
+    --line: #35504b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: ui-rounded, "Nunito", "Segoe UI", system-ui, sans-serif; line-height: 1.55; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 2rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.3rem; margin: 44px 0 12px; }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; }
+  p { margin: 0 0 10px; }
+  code { background: var(--accent-soft); color: var(--ink); padding: 1px 6px; border-radius: 6px; font-size: .86em; }
+  .sub { color: var(--muted); max-width: 64ch; }
+  .tag { display: inline-block; background: var(--warm-soft); color: #a8691f; font-size: .78rem; font-weight: 700;
+         padding: 3px 10px; border-radius: 99px; letter-spacing: .03em; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tag { color: var(--warm); } }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+  .grid4 { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .grid4 { grid-template-columns: 1fr 1fr; } }
+  .grid4 .card small { text-transform: uppercase; letter-spacing: .06em; color: var(--accent); font-weight: 700; }
+  .say { background: var(--accent-soft); border-color: transparent; margin-top: 12px; font-style: italic; }
+  .journey { display: grid; gap: 20px; grid-template-columns: 1fr; align-items: start; }
+  @media (min-width: 880px) { .journey { grid-template-columns: 360px 1fr; } }
+  svg { width: 100%; height: auto; display: block; }
+  .box rect { fill: var(--card); stroke: var(--line); stroke-width: 1.5; transition: all .2s; }
+  .box text { fill: var(--ink); font-size: 13px; font-family: inherit; text-anchor: middle; pointer-events: none; }
+  .box .s { fill: var(--muted); font-size: 11px; }
+  .box.on rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+  .arrow { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .detail h3 { font-size: 1.2rem; }
+  .detail h4 { margin: 14px 0 4px; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .detail ul { margin: 0; padding-left: 1.2em; }
+  .stepdots { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .stepdots button { width: 34px; height: 34px; padding: 0; background: var(--accent-soft); color: var(--accent); }
+  .stepdots button[aria-current="true"] { background: var(--accent); color: #fff; }
+  .controls { display: flex; gap: 8px; margin-top: 16px; }
+  button { font: inherit; font-weight: 700; border: 0; border-radius: 99px; padding: 8px 18px; cursor: pointer;
+           background: var(--accent); color: #fff; }
+  button.ghost { background: var(--accent-soft); color: var(--accent); }
+  button:disabled { opacity: .4; cursor: default; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tabs button { background: var(--accent-soft); color: var(--accent); }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+  .panel[hidden] { display: none; }
+  .panel ul { margin: 0; padding-left: 1.2em; }
+  .panel li { margin-bottom: 6px; }
+  details { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 10px 14px; margin-bottom: 8px; }
+  summary { cursor: pointer; font-weight: 700; }
+  details p, details ul { margin-top: 8px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto;
+        font-size: .85rem; line-height: 1.45; margin: 0; }
+  .fit { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .fit { grid-template-columns: 1fr 1fr; } }
+  .bar { height: 16px; border-radius: 99px; background: var(--accent-soft); overflow: hidden; margin: 6px 0 2px; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .bar.over i { background: var(--warm); }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+  .confirm { background: var(--warm-soft); border-color: var(--warm); }
+  footer { margin-top: 48px; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="tag">Spec · approved</span>
+  <h1>StudyFlow — Technical Spec</h1>
+  <p class="sub">The blueprint for how StudyFlow is built: two programs and a database, with Gemini as the planner and ordinary code as its checker. Markdown (<code>spec.md</code>) is the full version; this page is the quick-to-digest view.</p>
+
+  <h2>How this works, in plain language</h2>
+  <div class="grid4">
+    <div class="card"><small>The website</small><h3>Next.js</h3><p>What the student sees on phone or desktop. Login, hours, courses, the plan, check-in, replan. It stores nothing important. It shows what the server says.</p></div>
+    <div class="card"><small>The server</small><h3>Express on Node</h3><p>Accounts, saving, the "do the hours fit?" arithmetic, calling Gemini, and checking Gemini's answer. Your API key lives only here.</p></div>
+    <div class="card"><small>The database</small><h3>MongoDB</h3><p>Keeps the account, study hours, courses and topics, and the plan, so tomorrow it is all still there.</p></div>
+    <div class="card"><small>The planner</small><h3>Gemini</h3><p>Gets the topics, deadlines and hours. Returns a timetable as data, and for a replan, a short reason for each move.</p></div>
+  </div>
+  <div class="card say">"My server adds up whether it fits, asks Gemini to lay out the days, double-checks the answer, and saves it. When a student falls behind, it works out what's left, asks Gemini to reshuffle, shows what moved and why, and lets them accept or reject."</div>
+
+  <h2>One journey through the system <span class="sub" style="font-size:.9rem">— step through it, the diagram lights up</span></h2>
+  <div class="journey">
+    <svg viewBox="0 0 360 520" role="img" aria-label="Architecture diagram: website, Express server, planner engine, Gemini and MongoDB">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--muted)"/></marker></defs>
+      <g class="box" id="n-browser"><rect x="90" y="10" width="180" height="62" rx="14"/><text x="180" y="38">Next.js website</text><text class="s" x="180" y="56">localhost:3000</text></g>
+      <path class="arrow" d="M180 72 V118" marker-end="url(#ah)"/>
+      <text x="196" y="100" fill="currentColor" style="font-size:11px;fill:var(--muted)">/api/* forwarded</text>
+      <g class="box" id="n-server"><rect x="90" y="120" width="180" height="62" rx="14"/><text x="180" y="148">Express server</text><text class="s" x="180" y="166">localhost:4000 · auth, routes</text></g>
+      <path class="arrow" d="M135 182 V228" marker-end="url(#ah)"/>
+      <path class="arrow" d="M225 182 V228 H300 V268" marker-end="url(#ah)"/>
+      <g class="box" id="n-planner"><rect x="20" y="230" width="180" height="62" rx="14"/><text x="110" y="258">Planner engine</text><text class="s" x="110" y="276">fit · remaining · validate · diff</text></g>
+      <g class="box" id="n-db"><rect x="220" y="270" width="130" height="62" rx="14"/><text x="285" y="298">MongoDB</text><text class="s" x="285" y="316">users · setup · plan</text></g>
+      <path class="arrow" d="M110 292 V380" marker-end="url(#ah)"/>
+      <g class="box" id="n-ai"><rect x="20" y="382" width="180" height="62" rx="14"/><text x="110" y="410">Gemini API</text><text class="s" x="110" y="428">timetable + reasons (JSON)</text></g>
+      <text x="20" y="480" style="font-size:11px;fill:var(--muted)">Gemini only arranges and explains. The server</text>
+      <text x="20" y="496" style="font-size:11px;fill:var(--muted)">supplies hours, ids and dates, then verifies.</text>
+    </svg>
+    <div class="card detail" id="detail" aria-live="polite">
+      <noscript>Enable JavaScript to step through the journey. The full text is in spec.md.</noscript>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="ghost" id="prev">Back</button>
+    <button id="next">Next step</button>
+  </div>
+
+  <h2>The fit check — plain arithmetic, no AI</h2>
+  <div class="fit">
+    <div class="card">
+      <h3>Example that fits</h3>
+      <p class="sub">Biology exam in 6 days, topics need 10 h. Student has 2 h per day, so 12 h available.</p>
+      <div class="bar"><i style="width:83%"></i></div>
+      <small>10 h needed / 12 h available → build the plan</small>
+    </div>
+    <div class="card" style="background:var(--warm-soft);border-color:var(--warm)">
+      <h3>Example that doesn't</h3>
+      <p class="sub">Same exam, but topics need 15 h against 12 h available.</p>
+      <div class="bar over"><i style="width:100%"></i></div>
+      <small>3 h short → offer "add 0.5 h to each day" (6 days × 0.5 = 3 h) or "add 1.5 h on two days" → or keep my hours (lighter plan)</small>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:10px">It checks every exam date, not just the last: all topics due on or before a date must fit in the days before that date. Only after the student answers does the server call Gemini.</p>
+
+  <h2>Explore the pieces</h2>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="comp">Components</button>
+    <button role="tab" aria-selected="false" data-tab="data">Data</button>
+    <button role="tab" aria-selected="false" data-tab="files">Files</button>
+    <button role="tab" aria-selected="false" data-tab="valid">AI checking</button>
+    <button role="tab" aria-selected="false" data-tab="fail">If it breaks</button>
+    <button role="tab" aria-selected="false" data-tab="run">Run it</button>
+  </div>
+
+  <div class="panel" id="p-comp">
+    <p class="sub">Each component cites the PRD heading it implements.</p>
+    <details open><summary>Website: screens</summary><ul>
+      <li><b>Login</b> <code>/login</code> · <code>prd.md &gt; Account</code></li>
+      <li><b>Welcome</b> <code>/welcome</code> · <code>prd.md &gt; The Core Journey</code> step 2</li>
+      <li><b>Setup: hours</b> <code>/setup/hours</code> · <code>prd.md &gt; Study hours</code></li>
+      <li><b>Setup: courses and topics</b> <code>/setup/courses</code> · <code>prd.md &gt; Courses, topics and exam dates</code></li>
+      <li><b>Can't-fit panel</b> <code>CantFitPanel</code> · <code>prd.md &gt; When the plan doesn't fit</code></li>
+      <li><b>Plan view</b> <code>/plan</code>, <code>DayRow</code> · <code>prd.md &gt; Plan generation</code></li>
+      <li><b>Check-in</b> <code>CheckInControls</code> · <code>prd.md &gt; Daily check-in</code></li>
+      <li><b>Replan proposal</b> <code>ReplanProposal</code>, <b>Remaining alert</b> <code>RemainingAlert</code> · <code>prd.md &gt; Replan</code></li>
+    </ul></details>
+    <details><summary>Server: routes and engine</summary><ul>
+      <li><b>Auth routes</b>: register, login, logout, me. bcrypt hash, httpOnly cookie. <code>prd.md &gt; Account</code></li>
+      <li><b>Setup and courses routes</b>: validated saves. <code>prd.md &gt; Study hours</code></li>
+      <li><b>Planner engine</b> (<code>server/src/planner/</code>): capacity, remaining, priority, fit, lighten, validate, diff. Plain functions, easy to test.</li>
+      <li><b>Gemini client</b> (<code>server/src/ai/</code>): prompt, JSON schema, one retry.</li>
+      <li><b>Plan routes</b>: generate, check-in, move-forward, replan, accept, reject.</li>
+    </ul></details>
+    <details><summary>Look and feel in the build</summary>
+      <p>Warm off-white, white cards, slate-green text, one sage accent, a soft warm highlight for "what moved". No red. Fredoka for headings, Nunito for body. Spacious, 44px tap targets, one layout from phone to desktop. Kind copy: "You may not cover everything, and that's okay. Start with these."</p>
+    </details>
+  </div>
+
+  <div class="panel" id="p-data" hidden>
+    <table>
+      <tr><th>Data</th><th>Lives in</th><th>Updated by</th><th>When they come back</th></tr>
+      <tr><td><b>User</b><br>username, passwordHash, hasSeenWelcome</td><td>MongoDB</td><td>Register; Welcome screen</td><td>Login reads it; no second welcome</td></tr>
+      <tr><td><b>Setup</b><br>weekday, weekend, per-weekday overrides</td><td>MongoDB</td><td>Hours form</td><td>Form is pre-filled</td></tr>
+      <tr><td><b>Course</b><br>name, examDate, topics (difficulty, hours)</td><td>MongoDB</td><td>Courses page</td><td>Listed for editing</td></tr>
+      <tr><td><b>Plan</b><br>days → blocks (status, hoursStudied), capacityAdjustment, pendingReplan</td><td>MongoDB</td><td>Generate, check-in, move-forward, replan accept/reject</td><td>Saved plan loads; today expanded; an unanswered proposal is still there</td></tr>
+    </table>
+    <p class="sub" style="margin-top:10px">"Remaining" is never stored. It is worked out from the blocks that are partial (hours minus hours studied) or untouched.</p>
+  </div>
+
+  <div class="panel" id="p-files" hidden>
+<pre>studyflow/
+├── package.json        # install:all, dev (client + server together)
+├── client/             # Next.js website (3000)
+│   ├── next.config.js  # /api/* → Express (4000)
+│   ├── app/            # layout, globals.css, page.js,
+│   │                   # login/ welcome/ setup/hours/ setup/courses/ plan/
+│   ├── components/     # AuthForm, HoursForm, CourseEditor, TopicRow,
+│   │                   # CantFitPanel, DayList, DayRow, CheckInControls,
+│   │                   # ReplanProposal, RemainingAlert, Notice
+│   └── lib/            # api.js, auth-context.js, dates.js
+├── server/             # Express API (4000)
+│   ├── .env.example
+│   ├── src/
+│   │   ├── index.js  app.js  config.js
+│   │   ├── models/     # User, Setup, Course, Plan
+│   │   ├── middleware/ # requireAuth, errorHandler
+│   │   ├── routes/     # auth, setup, courses, plan
+│   │   ├── planner/    # capacity, remaining, priority, fit,
+│   │   │               # lighten, validate, diff, index
+│   │   └── ai/         # gemini, prompts, schema
+│   └── test/planner.test.js
+└── devpost/</pre>
+  </div>
+
+  <div class="panel" id="p-valid" hidden>
+    <p>Gemini's answer is checked by ordinary code before it is saved. All six must pass, or the server retries once with the errors fed back, then shows a friendly message.</p>
+    <ul>
+      <li>The reply has the expected JSON shape.</li>
+      <li>Every date is inside the window (start date to the day before the last exam).</li>
+      <li>No day's total goes over that day's hours.</li>
+      <li>Every block is a multiple of 0.5 h, at least 0.5 h.</li>
+      <li>Every topic exists, and each of its blocks falls before its own course's exam.</li>
+      <li>Each topic's scheduled hours exactly equal the hours it was asked to schedule.</li>
+    </ul>
+    <p class="sub" style="margin-top:10px">For replans, the server compares old and new schedules to find what really moved, then attaches Gemini's reason to each real move. A reason for something that didn't move is dropped.</p>
+  </div>
+
+  <div class="panel" id="p-fail" hidden>
+    <ul>
+      <li><b>Gemini slow, failing or invalid</b> → one retry, then "We couldn't build this just now. Your details are saved, so please try again." Nothing bad is ever saved.</li>
+      <li><b>Gemini rejects the call</b> (key, model access, rate limit) → same friendly message; real error in the server log. Change <code>GEMINI_MODEL</code>.</li>
+      <li><b>Strange input</b> → Generate disabled until a course has a topic; inline messages for past dates and bad hours.</li>
+      <li><b>Session expired</b> → back to login.</li>
+      <li><b>MongoDB unreachable</b> → clear error at startup, so it never fails mid-demo.</li>
+    </ul>
+  </div>
+
+  <div class="panel" id="p-run" hidden>
+<pre>npm run install:all
+cp server/.env.example server/.env   # fill MONGODB_URI, GEMINI_API_KEY, JWT_SECRET
+npm run dev                          # server :4000 + website :3000
+# open http://localhost:3000</pre>
+    <p class="sub" style="margin-top:10px">Demo recording: register → welcome → hours → two courses with three topics each → generate (include a squeezed case) → expand a day → one partial and one untouched → Replan → what moved and why → Accept. Local recording is enough. Deployment is optional, and not planned.</p>
+  </div>
+
+  <h2>Please confirm</h2>
+  <div class="card confirm">
+    <p><b>Edits trigger a proposal.</b> After the student edits courses, topics, dates or hours, they see the same Accept / Reject screen instead of the plan silently changing. The PRD says the plan "adjusts" and also that replans are accepted or rejected, so I reused the proposal flow. Say so if you want edits to apply automatically.</p>
+    <p><b>Other defaults I chose</b> (full list in <code>spec.md &gt; Decisions and Open Issues</code>): plain JavaScript rather than TypeScript, overrides by day of the week, "still need more time" adds a 50% buffer, Replan can also hit the Can't-fit panel, a rejected replan leaves the day open.</p>
+    <p><b>Check early in the build:</b> the Gemini structured-output options for Node, that <code>gemini-3.6-flash</code> works with your key, and that your MongoDB allows your IP.</p>
+  </div>
+
+  <footer>spec.md is canonical. This page is regenerated whenever the spec changes.</footer>
+</div>
+
+<script>
+(function () {
+  var steps = [
+    { t: "Arrive", on: ["browser", "server"], prd: "The Core Journey 1 · Screens and Layout (Login)", files: "client/app/page.js, lib/api.js",
+      body: ["The website asks <code>GET /api/auth/me</code>.", "No session cookie means redirect to <code>/login</code>."] },
+    { t: "Register or sign in", on: ["browser", "server", "db"], prd: "Account · States and Boundaries", files: "client/app/login, server/routes/auth.js, models/User.js",
+      body: ["The server hashes or checks the password and sets an httpOnly cookie.", "First login goes to <code>/welcome</code>; Continue saves <code>hasSeenWelcome</code>."] },
+    { t: "Set study hours", on: ["browser", "server", "db"], prd: "Study hours", files: "client/app/setup/hours, server/routes/setup.js",
+      body: ["Weekday X, weekend Y, optional per-weekday overrides.", "Saved with <code>PUT /api/setup</code>."] },
+    { t: "Add courses and topics", on: ["browser", "server", "db"], prd: "Courses, topics and exam dates", files: "client/app/setup/courses, CourseEditor, server/routes/courses.js",
+      body: ["Course name and exam date, then topics with difficulty and hours.", "Hours field hint: \"if not sure, take a safe guess\"."] },
+    { t: "Generate plan", on: ["browser", "server", "planner", "ai", "db"], prd: "Plan generation · When the plan doesn't fit", files: "server/planner/*, server/ai/*, routes/plan.js",
+      body: ["Server runs the <b>fit check</b> (arithmetic). If short, the Can't-fit panel offers more hours or a lighter plan.", "Then Gemini builds the schedule, the <b>validator</b> checks it (one retry), and it is saved."] },
+    { t: "Check the plan", on: ["browser", "server", "db"], prd: "Plan view", files: "client/app/plan, DayList, DayRow",
+      body: ["Days run up to the last exam, each collapsed.", "Open a day to see its hour blocks."] },
+    { t: "End-of-day check-in", on: ["browser", "server", "db"], prd: "Daily check-in", files: "CheckInControls, PUT /api/plan/checkin",
+      body: ["Each block: completed, partial (hours studied, optional \"need more time\"), or untouched.", "Partial blocks show hours left immediately."] },
+    { t: "Replan or move forward", on: ["browser", "server", "planner", "ai", "db"], prd: "Replan · Moving forward", files: "ReplanProposal, RemainingAlert, planner/remaining.js, diff.js",
+      body: ["<b>Replan</b>: server works out remaining work, asks Gemini to reshuffle later days, validates, finds what really moved, and stores a <i>pending proposal</i>. Accept swaps it in, Reject discards it.", "<b>Move forward</b>: nothing changes; a remaining alert shows."] },
+    { t: "Come back", on: ["browser", "server", "db"], prd: "States and Boundaries (Returning)", files: "GET /api/plan, DayList",
+      body: ["The saved plan loads from MongoDB.", "Today is expanded, the rest collapsed. Nothing lived only in the browser."] }
+  ];
+  var i = 0;
+  var detail = document.getElementById("detail");
+  function render() {
+    var s = steps[i];
+    ["browser","server","planner","ai","db"].forEach(function (k) {
+      document.getElementById("n-" + k).classList.toggle("on", s.on.indexOf(k) !== -1);
+    });
+    var dots = steps.map(function (_, n) {
+      return '<button type="button" data-i="' + n + '"' + (n === i ? ' aria-current="true"' : '') + ' aria-label="Step ' + (n + 1) + '">' + (n + 1) + '</button>';
+    }).join("");
+    detail.innerHTML = '<div class="stepdots">' + dots + '</div><h3>' + (i + 1) + '. ' + s.t + '</h3>' +
+      '<ul>' + s.body.map(function (b) { return "<li>" + b + "</li>"; }).join("") + '</ul>' +
+      '<h4>PRD heading</h4><p>' + s.prd + '</p><h4>Where in the code</h4><p><code>' + s.files + '</code></p>';
+    document.getElementById("prev").disabled = i === 0;
+    document.getElementById("next").disabled = i === steps.length - 1;
+  }
+  document.getElementById("prev").onclick = function () { if (i > 0) { i--; render(); } };
+  document.getElementById("next").onclick = function () { if (i < steps.length - 1) { i++; render(); } };
+  detail.addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]");
+    if (b) { i = +b.getAttribute("data-i"); render(); }
+  });
+  render();
+
+  var tabs = document.querySelectorAll(".tabs button");
+  tabs.forEach(function (b) {
+    b.addEventListener("click", function () {
+      tabs.forEach(function (t) {
+        var on = t === b;
+        t.setAttribute("aria-selected", on);
+        document.getElementById("p-" + t.dataset.tab).hidden = !on;
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

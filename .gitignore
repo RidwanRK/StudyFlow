@@ -1,0 +1,17 @@
+# Personal learning context stays out of commits by default
+/devpost/learner-profile.md
+
+# Local credentials (keep a secret-free .env.example)
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+
+# Agent skill folders and lock file (course tooling, not part of the app)
+/.claude/
+/.agents/
+/agent/
+/skills-lock.json
