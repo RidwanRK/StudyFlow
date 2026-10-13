@@ -127,6 +127,20 @@ export default function CourseEditor({ course = null, onSaved, onDeleted, regist
             {busy ? 'Adding…' : 'Add course'}
           </button>
         )}
+        {isNew && (
+          <button
+            type="button"
+            className="btn btn-quiet push-right"
+            onClick={() => {
+              setDraft(draftFrom(null));
+              setError('');
+            }}
+            disabled={busy || !hasContent}
+            title="Clear everything typed into this course"
+          >
+            Remove course
+          </button>
+        )}
         {dirty && (
           <>
             <button type="submit" className="btn btn-primary" disabled={busy}>

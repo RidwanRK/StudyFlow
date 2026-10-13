@@ -57,7 +57,7 @@ export default function CoursesPage() {
       // Save anything still in a form (a new course you haven't added yet, or edits you haven't saved).
       for (const card of [...registry.current.values()].filter((c) => c.pending)) {
         if (!(await card.save())) {
-          setBuildError('One of your courses needs a little more information first. Please check the message on that course.');
+          setBuildError('One of your courses needs a little more information first. Please check the message on that course. Anything that was complete has been saved.');
           setBuilding(false);
           return;
         }
@@ -75,6 +75,15 @@ export default function CoursesPage() {
   return (
     <>
       <AppHeader />
+      {building && (
+        <div className="build-overlay" role="status" aria-live="polite">
+          <div className="card stack build-card">
+            <span className="spinner" aria-hidden="true" />
+            <h2>Building your plan…</h2>
+            <p className="muted">We&apos;re saving your courses and laying out your days. This can take a few seconds.</p>
+          </div>
+        </div>
+      )}
       <main className="page">
         <SetupNav current="courses" />
         <div className="stack">
@@ -104,9 +113,8 @@ export default function CoursesPage() {
 
           <div className="card stack generate-card">
             <button type="button" className="btn btn-primary" disabled={!ready || building} onClick={handleGenerate}>
-              {building ? 'Building your plan…' : hasPlan ? 'Rebuild my plan' : 'Generate plan'}
+              {hasPlan ? 'Rebuild my plan' : 'Generate plan'}
             </button>
-            {building && <p className="muted center">This can take a few seconds while we lay out your days.</p>}
             {!ready && <p className="muted">Add a course with at least one topic to build your plan.</p>}
             {hasPlan && !building && (
               <Link href="/plan" className="muted center">
