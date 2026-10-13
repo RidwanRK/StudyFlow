@@ -22,6 +22,7 @@ export default function CoursesPage() {
   // Every course card registers here so Generate can save anything still pending first.
   const registry = useRef(new Map());
   const [newHasContent, setNewHasContent] = useState(false);
+  const [addingNew, setAddingNew] = useState(false); // the new-course form is always open until the first course exists
   const handlePendingChange = useCallback((key, isPending) => {
     if (key === 'new') setNewHasContent(isPending);
   }, []);
@@ -108,7 +109,24 @@ export default function CoursesPage() {
             />
           ))}
 
-          {courses !== null && <CourseEditor key={`new-${courses.length}`} registry={registry.current} regKey="new" onPendingChange={handlePendingChange} onSaved={(saved) => setCourses((list) => sortByExam([...list, saved]))} />}
+          {courses !== null && (courses.length === 0 || addingNew) && (
+            <CourseEditor
+              key={`new-${courses.length}`}
+              registry={registry.current}
+              regKey="new"
+              onPendingChange={handlePendingChange}
+              onCancel={courses.length > 0 ? () => setAddingNew(false) : undefined}
+              onSaved={(saved) => {
+                setCourses((list) => sortByExam([...list, saved]));
+                setAddingNew(false);
+              }}
+            />
+          )}
+          {courses !== null && courses.length > 0 && !addingNew && (
+            <button type="button" className="add-course-tile" onClick={() => setAddingNew(true)}>
+              + Add another course
+            </button>
+          )}
           </div>
 
           <div className="card stack generate-card">

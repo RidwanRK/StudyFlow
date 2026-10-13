@@ -697,3 +697,19 @@ h3 {
     animation-duration: 3s;
   }
 }
+
+/* ---------- add-another-course tile ---------- */
+.add-course-tile {
+  min-height: 120px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--accent-strong);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.add-course-tile:hover {
+  background: var(--accent-soft);
+}

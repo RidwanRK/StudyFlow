@@ -18,11 +18,12 @@ function draftFrom(course) {
 }
 
 // Edits one course (or, with no `course`, creates a new one). Edits stay in the form until "Save changes" (shown only when something changed).
-// Props: course (saved course or null), onSaved(course), onDeleted(id).
+// Props: course (saved course or null), onSaved(course), onDeleted(id), and for a new-course form an optional
+// onCancel() that closes the form (Remove course clears it first).
 // The page can ask every editor to save pending work before building a plan: each editor registers
 // { pending, save } in `registry` (a Map held by the page) under `regKey`, and reports whether it has
 // something unsaved through onPendingChange(regKey, boolean).
-export default function CourseEditor({ course = null, onSaved, onDeleted, registry, regKey, onPendingChange }) {
+export default function CourseEditor({ course = null, onSaved, onDeleted, onCancel, registry, regKey, onPendingChange }) {
   const isNew = !course;
   const [draft, setDraft] = useState(() => draftFrom(course));
   const [error, setError] = useState('');
@@ -42,6 +43,7 @@ export default function CourseEditor({ course = null, onSaved, onDeleted, regist
 
   useEffect(() => {
     onPendingChange?.(regKey, pending);
+    return () => onPendingChange?.(regKey, false);
   }, [pending, regKey, onPendingChange]);
 
   function updateTopic(index, patch) {
@@ -134,9 +136,10 @@ export default function CourseEditor({ course = null, onSaved, onDeleted, regist
             onClick={() => {
               setDraft(draftFrom(null));
               setError('');
+              onCancel?.();
             }}
-            disabled={busy || !hasContent}
-            title="Clear everything typed into this course"
+            disabled={busy}
+            title={onCancel ? 'Close this form' : 'Clear everything typed into this course'}
           >
             Remove course
           </button>
