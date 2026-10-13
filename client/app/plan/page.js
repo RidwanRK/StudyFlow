@@ -24,6 +24,8 @@ export default function PlanPage() {
   const [highlight, setHighlight] = useState(null); // blocks a just-accepted replan moved, softly highlighted
   const proposalRef = useRef(null);
   const fitRef = useRef(null);
+  const reasonRef = useRef('fell_behind'); // why the current replan was asked for ('edit' when courses or hours changed)
+  const reviewedRef = useRef(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -47,14 +49,24 @@ export default function PlanPage() {
     if (fit) fitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [fit]);
 
+  // Arriving from the setup pages after an edit (/plan?review=edit): go straight to reviewing the plan changes.
+  useEffect(() => {
+    if (!plan || reviewedRef.current) return;
+    if (new URLSearchParams(window.location.search).get('review') !== 'edit') return;
+    reviewedRef.current = true;
+    window.history.replaceState(null, '', '/plan');
+    if (plan.stale && !plan.pendingReplan) handleReplan(undefined, 'edit');
+  }, [plan]);
+
   // Ask for a new arrangement of the days still to come. Nothing changes until the student accepts.
-  async function handleReplan(fitChoice) {
+  async function handleReplan(fitChoice, reason) {
+    if (reason) reasonRef.current = reason;
     setError('');
     setInfo('');
     setHighlight(null);
     setWorking('Working out a new rhythm…');
     try {
-      const result = await api('/plan/replan', { method: 'POST', body: { today: localToday(), fitChoice } });
+      const result = await api('/plan/replan', { method: 'POST', body: { today: localToday(), reason: reasonRef.current, fitChoice } });
       if (result.status === 'needs_fit_choice') {
         setFit(result);
       } else if (result.status === 'up_to_date') {
@@ -89,12 +101,17 @@ export default function PlanPage() {
   }
 
   async function handleReject() {
+    const rejected = plan.pendingReplan;
     setError('');
     setWorking('One moment…');
     try {
       const { plan: updated } = await api('/plan/replan/reject', { method: 'POST' });
       setPlan(updated);
-      setInfo('No problem. Your plan is exactly as it was, and the unfinished work is still open.');
+      setInfo(
+        rejected?.reason === 'edit'
+          ? 'No problem. Your plan stays exactly as it is. You can review the changes again whenever you like.'
+          : 'No problem. Your plan is exactly as it was, and the unfinished work is still open.',
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -138,6 +155,18 @@ export default function PlanPage() {
           <Notice tone="error">{error}</Notice>
           <Notice>{info}</Notice>
           {plan === undefined && !error && <p className="muted center">Loading…</p>}
+
+          {plan?.stale && !pending && !fit && (
+            <div className="card update-card" role="status">
+              <p>
+                <strong>Your courses or study hours have changed since this plan was made.</strong> We can suggest how your plan could
+                adjust. You choose whether to accept it.
+              </p>
+              <button type="button" className="btn btn-primary" disabled={Boolean(working)} onClick={() => handleReplan(undefined, 'edit')}>
+                Review plan changes
+              </button>
+            </div>
+          )}
 
           {fit && (
             <div ref={fitRef}>

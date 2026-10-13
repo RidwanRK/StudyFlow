@@ -10,6 +10,7 @@ import Notice from './Notice';
 export default function HoursForm() {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
+  const [hasPlan, setHasPlan] = useState(false);
   const [weekday, setWeekday] = useState('3');
   const [weekend, setWeekend] = useState('5');
   const [overrides, setOverrides] = useState([]);
@@ -27,6 +28,9 @@ export default function HoursForm() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoaded(true));
+    api('/plan')
+      .then(({ plan }) => setHasPlan(Boolean(plan)))
+      .catch(() => {});
   }, []);
 
   const usedDays = new Set(overrides.map((o) => o.weekday));
@@ -49,7 +53,8 @@ export default function HoursForm() {
           dayOverrides: overrides.map((o) => ({ weekday: Number(o.weekday), hours: o.hours })),
         },
       });
-      router.push('/setup/courses');
+      // With a plan already in place, go on to review how it could adjust to the new hours.
+      router.push(hasPlan ? '/plan?review=edit' : '/setup/courses');
     } catch (err) {
       setError(err.message);
       setBusy(false);
@@ -110,7 +115,7 @@ export default function HoursForm() {
         <div className="hours-footer">
           <Notice tone="error">{error}</Notice>
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Saving…' : 'Save and continue'}
+            {busy ? 'Saving…' : hasPlan ? 'Save and review plan changes' : 'Save and continue'}
           </button>
         </div>
       </div>

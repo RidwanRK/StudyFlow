@@ -18,6 +18,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState('');
   const [hasPlan, setHasPlan] = useState(false);
+  const [stale, setStale] = useState(false); // the saved plan no longer matches the courses and hours
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState('');
   const [fit, setFit] = useState(null); // the server's "can't fit" answer, while the student chooses
@@ -30,6 +31,16 @@ export default function CoursesPage() {
     if (key === 'new') setNewHasContent(isPending);
   }, []);
 
+  // Whether a plan exists and whether it is out of date (checked again after every save).
+  function refreshPlanFlag() {
+    api('/plan')
+      .then(({ plan }) => {
+        setHasPlan(Boolean(plan));
+        setStale(Boolean(plan?.stale));
+      })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
   }, [user, loading, router]);
@@ -39,9 +50,7 @@ export default function CoursesPage() {
     api('/courses')
       .then(({ courses: list }) => setCourses(list))
       .catch((err) => setError(err.message));
-    api('/plan')
-      .then(({ plan }) => setHasPlan(Boolean(plan)))
-      .catch(() => {});
+    refreshPlanFlag();
   }, [user]);
 
   useEffect(() => {
@@ -129,8 +138,14 @@ export default function CoursesPage() {
               registry={registry.current}
               regKey={course.id}
               onPendingChange={handlePendingChange}
-              onSaved={(saved) => setCourses((list) => sortByExam(list.map((c) => (c.id === saved.id ? saved : c))))}
-              onDeleted={(id) => setCourses((list) => list.filter((c) => c.id !== id))}
+              onSaved={(saved) => {
+                setCourses((list) => sortByExam(list.map((c) => (c.id === saved.id ? saved : c))));
+                refreshPlanFlag();
+              }}
+              onDeleted={(id) => {
+                setCourses((list) => list.filter((c) => c.id !== id));
+                refreshPlanFlag();
+              }}
             />
           ))}
 
@@ -144,6 +159,7 @@ export default function CoursesPage() {
               onSaved={(saved) => {
                 setCourses((list) => sortByExam([...list, saved]));
                 setAddingNew(false);
+                refreshPlanFlag();
               }}
             />
           )}
@@ -157,6 +173,18 @@ export default function CoursesPage() {
           {fit && (
             <div ref={fitRef}>
               <CantFitPanel data={fit} busy={building} onChoose={requestPlan} />
+            </div>
+          )}
+
+          {hasPlan && stale && (
+            <div className="card update-card update-bar" role="status">
+              <p>
+                <strong>Your plan hasn&apos;t changed yet.</strong> You&apos;ve edited your courses, so we can suggest how the plan could
+                adjust. You choose whether to accept it.
+              </p>
+              <button type="button" className="btn btn-primary" disabled={building} onClick={() => router.push('/plan?review=edit')}>
+                Review plan changes
+              </button>
             </div>
           )}
 

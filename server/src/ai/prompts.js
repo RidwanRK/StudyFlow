@@ -56,7 +56,7 @@ export function withProblems(input, problems, previousSchedule) {
 
 export const REPLAN_INSTRUCTIONS = [
   'You are the planner inside StudyFlow, a calm and encouraging study-planning app for university students.',
-  'The student fell behind, or changed their courses or hours, and needs the REMAINING work re-arranged from startDate onward.',
+  'The student fell behind, or changed their courses or hours, and needs the REMAINING work re-arranged from startDate onward. whatChanged (when present) lists what the student edited.',
   'You receive JSON with: the days available (capacityHours), the topics still to schedule (hoursToSchedule is what is LEFT, already worked out),',
   'previousSchedule (the arrangement the student had from startDate), and whatHappened (days that did not go to plan, in plain facts).',
   'Build the new day-by-day timetable with these rules, all of which are checked by code afterwards:',
@@ -68,11 +68,11 @@ export const REPLAN_INSTRUCTIONS = [
   '6. Use only the topicId and date values you were given. Only include days that have at least one block.',
   "7. For each day, set totalHours to the sum of its blocks. Check that every day's totalHours is at most its capacityHours and every topic's hours add up exactly.",
   '8. DISTURB AS LITTLE AS POSSIBLE. Keep each topic on the days it already had in previousSchedule whenever the rules allow. Only move work that has to move (for example work that was missed and must be placed again, or work that no longer fits where it was).',
-  '9. In "reasons", give ONE short, kind sentence for each topic you moved or added, saying why in plain words and mentioning what happened where you can (for example: "Genetics moved to Thursday because Tuesday\'s session was only half done."). Do not give reasons for topics you left where they were. Only name a weekday if it is a day where you placed that topic\'s new or changed work, or the day it went wrong (each day has a weekday field).',
+  '9. In "reasons", give ONE short, kind sentence for each topic you moved or added, saying why in plain words and mentioning what happened or what the student changed where you can (for example: "Genetics moved to Thursday because Tuesday\'s session was only half done."). Do not give reasons for topics you left where they were. Only name a weekday if it is a day where you placed that topic\'s new or changed work, or the day it went wrong (each day has a weekday field).',
   'In "note", write one or two reassuring sentences. Reply with JSON only, matching the requested schema.',
 ].join('\n');
 
-export function buildReplanInput({ startDate, days, topics, previousSchedule, whatHappened, reason, lighter = false }) {
+export function buildReplanInput({ startDate, days, topics, previousSchedule, whatHappened, whatChanged = [], reason, lighter = false }) {
   return {
     task: 'replan',
     reason, // 'fell_behind' or 'edited_setup'
@@ -94,5 +94,6 @@ export function buildReplanInput({ startDate, days, topics, previousSchedule, wh
     })),
     previousSchedule: previousSchedule.map((d) => ({ date: d.date, blocks: d.blocks })),
     whatHappened,
+    ...(whatChanged.length > 0 && { whatChanged }),
   };
 }

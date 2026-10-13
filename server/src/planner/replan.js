@@ -84,6 +84,7 @@ export function applyProposal(plan, proposal) {
     capacityAdjustment: proposal.capacityAdjustment,
     targets: proposal.targets,
     lighterMessage: proposal.lighterMessage ?? '',
+    snapshot: proposal.snapshot ?? plan.snapshot,
     note: proposal.note ?? plan.note,
   };
 }

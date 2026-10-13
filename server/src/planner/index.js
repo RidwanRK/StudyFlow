@@ -20,6 +20,7 @@ import { rankTopics } from './priority.js';
 import { remainingPerTopic, topicsToSchedule } from './remaining.js';
 import { repairSchedule } from './repair.js';
 import { applyProposal, creditedPerTopic, effectiveTargets, mergeAdjustments, replanStart, whatHappened } from './replan.js';
+import { describeEdits, planSignature } from './snapshot.js';
 import { validateSchedule } from './validate.js';
 
 const MAX_ATTEMPTS = 3; // the first answer plus up to two corrected ones
@@ -172,6 +173,7 @@ export async function generatePlan({ userId, today, fitChoice }) {
     startDate: today,
     note: schedule.note,
     lighterMessage: message,
+    snapshot: planSignature(courses, setup),
     targets: allTopics.map((t) => ({ topicId: t.topicId, hours: scheduledHours.get(t.topicId) ?? 0, needed: t.hoursToSchedule })),
     capacityAdjustment: added,
     days: buildDays({ schedule, rankedTopics: topics, window: { start: today }, lastExam, courses }),
@@ -225,6 +227,7 @@ export async function replanPlan({ userId, today, reason = 'fell_behind', fitCho
 
   const facts = whatHappened(plan, start);
   const context = scheduleContext(days, topics);
+  const scheduledNow = new Map(topics.map((t) => [t.topicId, t.hoursToSchedule]));
 
   // Nothing new went wrong and the schedule already covers exactly what is left: there is nothing to suggest.
   if (reason !== 'edit' && facts.length === 0 && validateSchedule({ days: oldDays.filter((d) => d.blocks.length > 0) }, context).ok) {
@@ -237,8 +240,12 @@ export async function replanPlan({ userId, today, reason = 'fell_behind', fitCho
       startDate: start,
       days,
       topics,
-      previousSchedule: oldDays.filter((d) => d.blocks.length > 0),
+      // Only topics that still need scheduling: a deleted or finished topic is not something Gemini should keep.
+      previousSchedule: oldDays
+        .map((d) => ({ date: d.date, blocks: d.blocks.filter((b) => scheduledNow.has(b.topicId)) }))
+        .filter((d) => d.blocks.length > 0),
       whatHappened: facts,
+      whatChanged: reason === 'edit' ? describeEdits(plan.snapshot, courses, setup, (id, isCourse) => (isCourse ? 'a course' : labels.get(id)?.split(': ')[1] ?? 'a topic')) : [],
       reason: reason === 'edit' ? 'edited_setup' : 'fell_behind',
       lighter: Boolean(message),
     }),
@@ -257,7 +264,6 @@ export async function replanPlan({ userId, today, reason = 'fell_behind', fitCho
 
   // New targets: what has been studied so far plus what is now scheduled, so "remaining" stays right after accepting.
   const credited = creditedPerTopic(plan);
-  const scheduledNow = new Map(topics.map((t) => [t.topicId, t.hoursToSchedule]));
   const newTargets = targets.map((t) =>
     scheduledNow.has(t.topicId) || remaining.has(t.topicId)
       ? { ...t, hours: (credited.get(t.topicId) ?? 0) + (scheduledNow.get(t.topicId) ?? 0) }
@@ -272,6 +278,7 @@ export async function replanPlan({ userId, today, reason = 'fell_behind', fitCho
     capacityAdjustment: mergeAdjustments(base, added),
     targets: newTargets,
     lighterMessage: message,
+    snapshot: planSignature(courses, setup), // the courses and hours this proposal was worked out from
     moves,
     note: schedule.note,
   };
@@ -292,6 +299,7 @@ export async function acceptReplan({ userId }) {
   planDoc.capacityAdjustment = applied.capacityAdjustment;
   planDoc.targets = applied.targets;
   planDoc.lighterMessage = applied.lighterMessage;
+  planDoc.snapshot = applied.snapshot;
   planDoc.note = applied.note;
   planDoc.pendingReplan = null;
   planDoc.markModified('pendingReplan');

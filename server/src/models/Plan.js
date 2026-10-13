@@ -33,6 +33,8 @@ const planSchema = new mongoose.Schema({
   note: { type: String, default: '' }, // Gemini's short summary of the plan
   // Set when the student kept their hours and got a lighter plan: the consoling message naming what to start with.
   lighterMessage: { type: String, default: '' },
+  // What the plan was built from (see planner/snapshot.js); differs from the current courses/hours when the plan is out of date.
+  snapshot: { type: String, default: '' },
   // Hours each topic was scheduled for. Normally a topic's full hours; less in a lighter plan. Later replans
   // measure remaining work against these targets.
   targets: [{ _id: false, topicId: String, hours: Number, needed: Number }],
