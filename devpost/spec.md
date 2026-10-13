@@ -198,7 +198,7 @@ PRD ref: `prd.md > Plan generation`, `prd.md > When the plan doesn't fit`, `prd.
 - **Input to Gemini** (one JSON message): the start date, the list of schedulable days with their capacity hours, the topics (id, course, name, difficulty, last allowed date, hours to schedule, priority rank), and, for a replan, the previous schedule plus the reason ("fell behind" or "edited setup").
 - **Fixed instructions:** schedule exactly the requested hours, never exceed a day's capacity, finish each topic before its deadline, give earlier exams and harder topics priority, use 0.5h blocks, return JSON only. For a replan, keep unchanged work where it was whenever possible and give one short, kind reason per topic that moved.
 - **Expected reply:** `{ days: [{ date, blocks: [{ topicId, hours }] }], reasons: [{ topicId, reason }], note: string }`. Gemini never invents hours, ids or dates: the server supplies them all and verifies the reply.
-- Low temperature, a 60-second timeout, one retry with the validation errors appended to the prompt.
+- Low temperature and a 60-second timeout. If the schedule breaks a rule, the server first tries to repair small slips itself (`planner/repair.js`: move half-hours off an over-full day, trim or top up a topic), and only if that cannot produce a valid schedule does it ask Gemini again (up to two more times, showing its previous answer and the problems found). The repaired or accepted schedule always passes `validate.js`.
 PRD ref: `prd.md > Plan generation`, `prd.md > Replan`.
 
 #### Plan routes
@@ -234,6 +234,8 @@ Four Mongoose collections. All are keyed by the student's `userId`. Dates are st
 userId
 generatedAt
 capacityAdjustment: { extraPerDay, extraDays: [{ date, hours }] }   // from accepted fit choices
+lighterMessage                                  // set when the student kept their hours (lighter plan)
+targets: [{ topicId, hours }]                   // hours each topic was scheduled for (less than needed in a lighter plan)
 days: [{
   date,
   resolution: null | "moved_forward" | "replanned",
@@ -313,7 +315,7 @@ No other services. No email, payments, storage or hosting.
 
 ## Important Failure Modes
 
-- **Gemini is slow, fails, or returns an invalid plan** → one automatic retry with the validation errors fed back. If it still fails: "We couldn't build this just now. Your details are saved, so please try again in a moment." The loading state reads "Building your plan…". Nothing is saved and an existing plan is never overwritten by a bad answer.
+- **Gemini is slow, fails, or returns an invalid plan** → a local repair of small slips, then up to two corrected retries with the validation errors fed back. If it still fails: "We couldn't build this just now. Your details are saved, so please try again in a moment." The loading state reads "Building your plan…". Nothing is saved and an existing plan is never overwritten by a bad answer.
 - **Gemini rejects the call** (bad key, no access to the model, rate limit) → the same friendly message to the student, and the real error logged to the server console. Fix by changing `GEMINI_MODEL` or the key.
 - **Strange or empty input** → Generate is disabled until there is a course with a topic. Past exam dates, zero or negative hours, and a missing name show an inline message. A topic with no known hours is covered by the "safe guess" hint, so students are never stuck.
 - **Session expires or the cookie is missing** → any 401 sends the student back to `/login`.

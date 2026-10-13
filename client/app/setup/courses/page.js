@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { localToday } from '@/lib/dates';
 import AppHeader from '@/components/AppHeader';
+import CantFitPanel from '@/components/CantFitPanel';
 import CourseEditor from '@/components/CourseEditor';
 import Notice from '@/components/Notice';
 import SetupNav from '@/components/SetupNav';
@@ -19,6 +20,8 @@ export default function CoursesPage() {
   const [hasPlan, setHasPlan] = useState(false);
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState('');
+  const [fit, setFit] = useState(null); // the server's "can't fit" answer, while the student chooses
+  const fitRef = useRef(null);
   // Every course card registers here so Generate can save anything still pending first.
   const registry = useRef(new Map());
   const [newHasContent, setNewHasContent] = useState(false);
@@ -41,6 +44,10 @@ export default function CoursesPage() {
       .catch(() => {});
   }, [user]);
 
+  useEffect(() => {
+    if (fit) fitRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [fit]);
+
   if (loading || !user) {
     return (
       <main className="page">
@@ -50,25 +57,43 @@ export default function CoursesPage() {
   }
 
   const ready = (courses ?? []).some((c) => c.topics.length > 0) || newHasContent;
-  async function handleGenerate() {
-    if (hasPlan && !window.confirm('This builds a fresh plan and replaces your current one, including any check-ins. Continue?')) return;
+  // Save anything still in a form (a new course you haven't saved yet, or edits you haven't saved).
+  // Returns false when a course was turned down; its card shows why.
+  async function savePending() {
+    for (const card of [...registry.current.values()].filter((c) => c.pending)) {
+      if (!(await card.save())) return false;
+    }
+    return true;
+  }
+
+  // Ask for a plan. If the hours don't fit the server answers with options instead; the student picks one
+  // and we ask again with fitChoice.
+  async function requestPlan(fitChoice) {
     setBuildError('');
     setBuilding(true);
     try {
-      // Save anything still in a form (a new course you haven't added yet, or edits you haven't saved).
-      for (const card of [...registry.current.values()].filter((c) => c.pending)) {
-        if (!(await card.save())) {
-          setBuildError('One of your courses needs a little more information first. Please check the message on that course. Anything that was complete has been saved.');
-          setBuilding(false);
-          return;
-        }
+      if (!fitChoice && !(await savePending())) {
+        setBuildError('One of your courses needs a little more information first. Please check the message on that course. Anything that was complete has been saved.');
+        setBuilding(false);
+        return;
       }
-      await api('/plan/generate', { method: 'POST', body: { today: localToday() } });
+      const result = await api('/plan/generate', { method: 'POST', body: { today: localToday(), fitChoice } });
+      if (result.status === 'needs_fit_choice') {
+        setFit(result);
+        setBuilding(false);
+        return;
+      }
       router.push('/plan');
     } catch (err) {
       setBuildError(err.message);
       setBuilding(false);
     }
+  }
+
+  function handleGenerate() {
+    if (hasPlan && !window.confirm('This builds a fresh plan and replaces your current one, including any check-ins. Continue?')) return;
+    setFit(null);
+    requestPlan();
   }
 
   const sortByExam = (list) => [...list].sort((a, b) => a.examDate.localeCompare(b.examDate));
@@ -128,6 +153,12 @@ export default function CoursesPage() {
             </button>
           )}
           </div>
+
+          {fit && (
+            <div ref={fitRef}>
+              <CantFitPanel data={fit} busy={building} onChoose={requestPlan} />
+            </div>
+          )}
 
           <div className="card stack generate-card">
             <button type="button" className="btn btn-primary" disabled={!ready || building} onClick={handleGenerate}>

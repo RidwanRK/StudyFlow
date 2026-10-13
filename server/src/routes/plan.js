@@ -17,9 +17,12 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/generate', async (req, res) => {
-  const { today } = z.object({ today: todayField }).parse(req.body ?? {});
-  const plan = await generatePlan({ userId: req.userId, today: today ?? serverToday() });
-  res.json({ status: 'ready', plan: publicPlan(plan) });
+  const { today, fitChoice } = z
+    .object({ today: todayField, fitChoice: z.enum(['daily', 'extra_days', 'keep']).optional() })
+    .parse(req.body ?? {});
+  const result = await generatePlan({ userId: req.userId, today: today ?? serverToday(), fitChoice });
+  if (result.status === 'needs_fit_choice') return res.json(result);
+  res.json({ status: 'ready', plan: publicPlan(result.plan) });
 });
 
 export default router;

@@ -49,7 +49,7 @@ Build mode: fast (from saved preference; switch any time)
   Learner check: Click Generate plan on your own courses, watch the loading text, then open a few days. Do the blocks look sensible (harder and earlier-exam topics first, never more than your hours)? Refresh to confirm it is still there.
   Commit: `Add AI plan generation with server-side validation`
 
-- [ ] **5. When your hours don't fit, you get kind options, or a lighter plan**
+- [x] **5. When your hours don't fit, you get kind options, or a lighter plan**
   Becomes usable: If the topics can't fit before an exam, Generate plan shows the Can't fit panel: "add x hours each day", "add y hours on one or two days" (when small enough) or "keep my hours". Accepting builds the plan with the extra hours; keeping builds a lighter plan with a consoling message naming the topics to start with.
   Why now: It is the same generate path with one more branch, and it is easiest to get right now, before check-in and replan reuse it.
   PRD ref: `prd.md > When the plan doesn't fit`, `prd.md > States and Boundaries` (Hours don't fit)
@@ -91,7 +91,7 @@ Build mode: fast (from saved preference; switch any time)
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 4 (first AI-built plan on your own courses; your feedback can still shape the replan and the rest)
+- [x] Early usable behavior explored — after slice 4 (first AI-built plan on your own courses; your feedback can still shape the replan and the rest)
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -128,3 +128,5 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - Clicking Generate plan now shows a full-screen "Building your plan…" overlay, and the new-course box has its own "Remove course" button (it clears what was typed) — learner feedback: while building, a typed course was saved into a new card and an empty "Add a course" box appeared, which looked like a duplicate; and the box being filled in had no remove option, unlike saved courses.
 - The "Add a course" form is no longer a permanent empty box: once a course exists it appears only after clicking "+ Add another course", and its "Remove course" button (always enabled) closes it; with no courses yet the form stays open and Remove clears it — learner feedback: an empty course box could not be removed.
 - The new-course form's button now reads "Save changes" (was "Add course"); after it is clicked the course appears as a saved card showing "✓ All changes saved" and the dashed "+ Add another course" tile returns — learner feedback, for consistency with the saved cards.
+- Slice 5 added `planner/repair.js` (not in the spec) and raised Gemini attempts from two to three — Gemini's `gemini-3.5-flash-lite` often put a half hour too many on a day when days were almost full (the lighter plan), and retries alone failed about one run in three. The server now repairs small slips deterministically (move half-hours to the nearest day with room before the topic's deadline, trim or top up topics) and re-validates; retries show Gemini its previous answer and the problems, and the schema asks it for each day's `totalHours`. Stronger models were tried and rejected: `gemini-3.5-flash` took 9-26 s and still failed 1 run in 6, `gemini-3.7-flash` failed twice in two. After the change, 12 of 12 live runs (ten lighter plans) passed in about 2 s each.
+- The plan stores `targets` (hours scheduled per topic) and `lighterMessage`, and the "can't fit" answer is `{ status: "needs_fit_choice", shortfall, options: { daily, extraDays } }`; the browser only names its choice (`daily`, `extra_days`, `keep`) and the server recomputes the amounts. Slices 6-7 must measure "remaining" against `targets`, not the topic's full hours, or a lighter plan would look permanently behind.

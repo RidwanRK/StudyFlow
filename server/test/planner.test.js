@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { capacityFor, dayCapacities } from '../src/planner/capacity.js';
 import { rankTopics } from '../src/planner/priority.js';
 import { topicsToSchedule } from '../src/planner/remaining.js';
-import { checkFit } from '../src/planner/fit.js';
+import { adjustDays, checkFit, fitOptions } from '../src/planner/fit.js';
+import { lighten } from '../src/planner/lighten.js';
+import { repairSchedule } from '../src/planner/repair.js';
 import { validateSchedule } from '../src/planner/validate.js';
 
 // 2030-01-07 is a Monday, 2030-01-12 a Saturday, 2030-01-13 a Sunday.
@@ -176,5 +178,159 @@ describe('validateSchedule: the check that stands between Gemini and the student
     const schedule = good();
     schedule.days[0].blocks[1].hours = 0.75;
     assert.ok(validateSchedule(schedule, context()).errors.some((e) => e.includes('steps of 0.5')));
+  });
+});
+
+describe("can't-fit options", () => {
+  // 5 days x 3h = 15h available before Jan 11.
+  const days = ['2030-01-07', '2030-01-08', '2030-01-09', '2030-01-10', '2030-01-11'].map((date) => ({ date, capacity: 3 }));
+  const topic = (hours, extra = {}) => ({ lastAllowedDate: '2030-01-11', hoursToSchedule: hours, priorityRank: 1, ...extra });
+
+  test('nothing to suggest when it already fits', () => {
+    assert.deepEqual(fitOptions(days, [topic(15)]), { daily: null, extraDays: null });
+  });
+
+  test('daily option: shortfall spread over the window, rounded up to half hours, and it really fits', () => {
+    const topics = [topic(17)]; // short by 2h over 5 days -> 0.4 -> 0.5h a day
+    const { daily } = fitOptions(days, topics);
+    assert.deepEqual(daily, { extraPerDay: 0.5 });
+    assert.equal(checkFit(adjustDays(days, daily), topics).fits, true);
+  });
+
+  test('one-day option for a small shortfall goes on a single day and really fits', () => {
+    const topics = [topic(17)];
+    const { extraDays } = fitOptions(days, topics);
+    assert.equal(extraDays.days.length, 1);
+    assert.equal(extraDays.days[0].hours, 2);
+    assert.equal(checkFit(adjustDays(days, { extraDays: extraDays.days }), topics).fits, true);
+  });
+
+  test('two-day option splits a bigger (but still small) shortfall', () => {
+    const topics = [topic(20)]; // short by 5h -> two days of 2.5h
+    const { extraDays } = fitOptions(days, topics);
+    assert.deepEqual(extraDays.days.map((d) => d.hours), [2.5, 2.5]);
+    assert.equal(checkFit(adjustDays(days, { extraDays: extraDays.days }), topics).fits, true);
+  });
+
+  test('the extra-days option is not offered for a large shortfall, the daily one may be', () => {
+    const topics = [topic(23)]; // short by 8h: more than 2 days x 3h
+    const options = fitOptions(days, topics);
+    assert.equal(options.extraDays, null);
+    assert.deepEqual(options.daily, { extraPerDay: 2 }); // 8h / 5 days = 1.6 -> 2h
+  });
+
+  test('neither option when far too much is needed', () => {
+    const options = fitOptions(days, [topic(60)]);
+    assert.equal(options.daily, null);
+    assert.equal(options.extraDays, null);
+  });
+
+  test('extra hours go on the roomiest days (weekends) in the tight window', () => {
+    // Jan 12 Saturday = 5h, Jan 13 Sunday = 5h, the rest 3h
+    const week = [['2030-01-10', 3], ['2030-01-11', 3], ['2030-01-12', 5], ['2030-01-13', 5]].map(([date, capacity]) => ({ date, capacity }));
+    const topics = [{ lastAllowedDate: '2030-01-13', hoursToSchedule: 17, priorityRank: 1 }]; // 16h available, short by 1h
+    const { extraDays } = fitOptions(week, topics);
+    assert.equal(extraDays.days.length, 1);
+    assert.equal(extraDays.days[0].date, '2030-01-12');
+  });
+});
+
+describe('lighter plan', () => {
+  const days = ['2030-01-07', '2030-01-08'].map((date) => ({ date, capacity: 3 })); // 6h available
+  const topics = [
+    { topicId: 'a', name: 'A', lastAllowedDate: '2030-01-08', hoursToSchedule: 6, priorityRank: 1 },
+    { topicId: 'b', name: 'B', lastAllowedDate: '2030-01-08', hoursToSchedule: 4, priorityRank: 2 },
+    { topicId: 'c', name: 'C', lastAllowedDate: '2030-01-08', hoursToSchedule: 2, priorityRank: 3 },
+  ]; // 12h needed for 6h available -> ratio 0.5
+
+  test('scales every topic by one ratio and the result fits', () => {
+    const result = lighten(days, topics);
+    assert.equal(result.ratio, 0.5);
+    assert.deepEqual(result.topics.map((t) => [t.topicId, t.hoursToSchedule]), [['a', 3], ['b', 2], ['c', 1]]);
+    assert.equal(checkFit(days, result.topics).fits, true);
+  });
+
+  test('names the highest-priority topics as the ones to start with', () => {
+    const result = lighten(days, topics);
+    assert.deepEqual(result.important.map((t) => t.topicId), ['a', 'b', 'c']);
+  });
+
+  test('rounds down to half hours and drops topics that shrink to nothing', () => {
+    const small = [
+      { topicId: 'a', name: 'A', lastAllowedDate: '2030-01-08', hoursToSchedule: 10, priorityRank: 1 },
+      { topicId: 'b', name: 'B', lastAllowedDate: '2030-01-08', hoursToSchedule: 0.5, priorityRank: 2 },
+    ]; // 10.5h for 6h: ratio ~0.571 -> A 5.5 (5.71 rounded down), B 0.285 -> 0
+    const result = lighten(days, small);
+    assert.deepEqual(result.topics.map((t) => [t.topicId, t.hoursToSchedule]), [['a', 5.5]]);
+    assert.deepEqual(result.dropped.map((t) => t.topicId), ['b']);
+    assert.equal(checkFit(days, result.topics).fits, true);
+  });
+
+  test('changes nothing when everything already fits', () => {
+    const fits = [{ topicId: 'a', name: 'A', lastAllowedDate: '2030-01-08', hoursToSchedule: 4, priorityRank: 1 }];
+    const result = lighten(days, fits);
+    assert.equal(result.ratio, 1);
+    assert.equal(result.topics[0].hoursToSchedule, 4);
+  });
+});
+
+describe('repairSchedule: nudging a nearly-right schedule from Gemini', () => {
+  const context = () => ({
+    days: new Map([['2030-01-07', 3], ['2030-01-08', 3], ['2030-01-09', 3]]),
+    topics: new Map([
+      ['a', { lastAllowedDate: '2030-01-09', hoursToSchedule: 5 }],
+      ['b', { lastAllowedDate: '2030-01-08', hoursToSchedule: 3 }],
+    ]),
+  });
+  const schedule = (days) => ({ days, reasons: [{ topicId: 'a', reason: 'kept' }], note: 'n' });
+
+  test('leaves a valid schedule valid (and its reasons and note alone)', () => {
+    const good = schedule([
+      { date: '2030-01-07', blocks: [{ topicId: 'b', hours: 3 }] },
+      { date: '2030-01-08', blocks: [{ topicId: 'a', hours: 3 }] },
+      { date: '2030-01-09', blocks: [{ topicId: 'a', hours: 2 }] },
+    ]);
+    const fixed = repairSchedule(good, context());
+    assert.equal(validateSchedule(fixed, context()).ok, true);
+    assert.equal(fixed.note, 'n');
+    assert.deepEqual(fixed.reasons, good.reasons);
+  });
+
+  test('moves hours off a day that is over capacity (the slip seen with Gemini)', () => {
+    const over = schedule([
+      { date: '2030-01-07', blocks: [{ topicId: 'b', hours: 3 }, { topicId: 'a', hours: 1 }] }, // 4h on a 3h day
+      { date: '2030-01-08', blocks: [{ topicId: 'a', hours: 2 }] },
+      { date: '2030-01-09', blocks: [{ topicId: 'a', hours: 2 }] },
+    ]);
+    assert.equal(validateSchedule(over, context()).ok, false);
+    const fixed = repairSchedule(over, context());
+    assert.equal(validateSchedule(fixed, context()).ok, true);
+  });
+
+  test('drops a block after its topic deadline and places the hours earlier', () => {
+    const late = schedule([
+      { date: '2030-01-07', blocks: [{ topicId: 'a', hours: 3 }] },
+      { date: '2030-01-08', blocks: [{ topicId: 'a', hours: 2 }] },
+      { date: '2030-01-09', blocks: [{ topicId: 'b', hours: 3 }] }, // b is due by Jan 8
+    ]);
+    const fixed = repairSchedule(late, context());
+    assert.equal(validateSchedule(fixed, context()).ok, true);
+    assert.ok(fixed.days.every((d) => d.blocks.every((b) => b.topicId !== 'b' || d.date <= '2030-01-08')));
+  });
+
+  test('tops up a missing topic, trims an excess one, and ignores unknown topics', () => {
+    const messy = schedule([
+      { date: '2030-01-07', blocks: [{ topicId: 'a', hours: 2 }, { topicId: 'ghost', hours: 1 }] }, // a short, ghost unknown
+      { date: '2030-01-08', blocks: [{ topicId: 'b', hours: 2 }] }, // b short by 1
+      { date: '2030-01-09', blocks: [{ topicId: 'a', hours: 3 }, { topicId: 'a', hours: 2 }] }, // a way over
+    ]);
+    const fixed = repairSchedule(messy, context());
+    assert.equal(validateSchedule(fixed, context()).ok, true);
+  });
+
+  test('gives up (null) when there is simply not enough room', () => {
+    const tight = context();
+    tight.topics.set('c', { lastAllowedDate: '2030-01-09', hoursToSchedule: 5 }); // 13h needed, 9h exist
+    assert.equal(repairSchedule(schedule([]), tight), null);
   });
 });

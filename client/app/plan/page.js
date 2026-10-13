@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { formatHours } from '@/lib/dates';
+import { formatDay, formatHours } from '@/lib/dates';
 import AppHeader from '@/components/AppHeader';
 import DayList from '@/components/DayList';
 import Notice from '@/components/Notice';
@@ -41,6 +41,13 @@ export default function PlanPage() {
   const studyDays = plan ? plan.days.filter((d) => d.blocks.length > 0).length : 0;
   const totalHours = plan ? plan.days.reduce((sum, d) => sum + d.blocks.reduce((s, b) => s + b.hours, 0), 0) : 0;
 
+  const adj = plan?.capacityAdjustment;
+  const extraNote = adj?.extraPerDay > 0
+    ? `Includes the extra ${formatHours(adj.extraPerDay)} a day you chose.`
+    : adj?.extraDays?.length > 0
+      ? `Includes the extra time you chose: ${adj.extraDays.map((d) => `${formatHours(d.hours)} on ${formatDay(d.date)}`).join(' and ')}.`
+      : '';
+
   return (
     <>
       <AppHeader />
@@ -59,6 +66,16 @@ export default function PlanPage() {
                     {formatHours(totalHours)} of studying across {studyDays} {studyDays === 1 ? 'day' : 'days'}. Tap a day to open it.
                   </p>
                 </div>
+                {plan.lighterMessage && (
+                  <div className="card lighter-card">
+                    <p>{plan.lighterMessage}</p>
+                  </div>
+                )}
+                {extraNote && (
+                  <div className="card">
+                    <p className="muted">{extraNote}</p>
+                  </div>
+                )}
                 <Link href="/setup/courses" className="btn btn-quiet align-start link-btn">
                   Edit courses or rebuild the plan
                 </Link>

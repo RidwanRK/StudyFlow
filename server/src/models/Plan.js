@@ -31,6 +31,11 @@ const planSchema = new mongoose.Schema({
   generatedAt: { type: Date, default: Date.now },
   startDate: { type: String, required: true },
   note: { type: String, default: '' }, // Gemini's short summary of the plan
+  // Set when the student kept their hours and got a lighter plan: the consoling message naming what to start with.
+  lighterMessage: { type: String, default: '' },
+  // Hours each topic was scheduled for. Normally a topic's full hours; less in a lighter plan. Later replans
+  // measure remaining work against these targets.
+  targets: [{ _id: false, topicId: String, hours: Number }],
   capacityAdjustment: {
     extraPerDay: { type: Number, default: 0 },
     extraDays: [{ _id: false, date: String, hours: Number }],
@@ -48,6 +53,7 @@ export function publicPlan(plan) {
     generatedAt: obj.generatedAt,
     startDate: obj.startDate,
     note: obj.note,
+    lighterMessage: obj.lighterMessage ?? '',
     capacityAdjustment: obj.capacityAdjustment,
     days: obj.days.map((d) => ({ date: d.date, exams: d.exams, resolution: d.resolution ?? null, blocks: d.blocks })),
     pendingReplan: obj.pendingReplan ?? null,

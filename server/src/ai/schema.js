@@ -6,6 +6,7 @@ export const scheduleSchema = z.object({
   days: z.array(
     z.object({
       date: z.string().describe('YYYY-MM-DD'),
+      totalHours: z.number().describe("The sum of the hours of this day's blocks. Work it out and make sure it does not exceed that day's capacityHours."),
       blocks: z.array(
         z.object({
           topicId: z.string(),
