@@ -4,8 +4,9 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import AppHeader from '@/components/AppHeader';
+import HoursForm from '@/components/HoursForm';
+import SetupNav from '@/components/SetupNav';
 
-// Placeholder: the real hours form arrives in the next slice.
 export default function HoursPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -26,10 +27,8 @@ export default function HoursPage() {
     <>
       <AppHeader />
       <main className="page page-narrow">
-        <div className="card stack">
-          <h1>Your study hours</h1>
-          <p className="muted">You&apos;re signed in. Setting your hours comes next.</p>
-        </div>
+        <SetupNav current="hours" />
+        <HoursForm />
       </main>
     </>
   );

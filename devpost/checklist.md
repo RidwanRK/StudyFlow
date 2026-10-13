@@ -29,7 +29,7 @@ Build mode: fast (from saved preference; switch any time)
   Learner check: Open `http://localhost:3000` on your computer (and on your phone if you can), register, read the Welcome message, continue, refresh the page, sign out, sign in again. Say whether the look feels playful and calm.
   Commit: `Add accounts, Welcome message and base look`
 
-- [ ] **3. You can save your study hours and courses with topics, and they are still there when you come back**
+- [x] **3. You can save your study hours and courses with topics, and they are still there when you come back**
   Becomes usable: `/setup/hours` takes weekday hours, weekend hours and per-weekday overrides; `/setup/courses` takes courses (name, exam date) with topics (name, difficulty, hours, safe-guess hint). Both are saved and pre-filled on return. Generate plan is present but disabled until a course has a topic.
   Why now: The planner needs real inputs. This step also forces the data shape for Setup and Course, which every later slice depends on, while mistakes are cheap.
   PRD ref: `prd.md > Study hours`, `prd.md > Courses, topics and exam dates`, `prd.md > The Core Journey` (steps 3-4), `prd.md > States and Boundaries` (Topic with unknown hours)
