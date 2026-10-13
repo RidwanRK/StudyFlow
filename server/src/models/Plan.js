@@ -35,7 +35,7 @@ const planSchema = new mongoose.Schema({
   lighterMessage: { type: String, default: '' },
   // Hours each topic was scheduled for. Normally a topic's full hours; less in a lighter plan. Later replans
   // measure remaining work against these targets.
-  targets: [{ _id: false, topicId: String, hours: Number }],
+  targets: [{ _id: false, topicId: String, hours: Number, needed: Number }],
   capacityAdjustment: {
     extraPerDay: { type: Number, default: 0 },
     extraDays: [{ _id: false, date: String, hours: Number }],

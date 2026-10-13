@@ -24,8 +24,8 @@ function marksFrom(day) {
 }
 
 // End-of-day check-in for one day: mark each block, save, then choose Replan or Move forward when something is unfinished.
-// Props: day, today (local date), onPlanChange(plan).
-export default function CheckInControls({ day, today, onPlanChange }) {
+// Props: day, today (local date), onPlanChange(plan), onReplan(), moved (Set of topicIds just moved onto this day).
+export default function CheckInControls({ day, today, onPlanChange, onReplan, moved }) {
   const [marks, setMarks] = useState(() => marksFrom(day));
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -91,7 +91,7 @@ export default function CheckInControls({ day, today, onPlanChange }) {
                 ? block.hours
                 : null;
           return (
-            <li key={block.blockId} className="checkin-item">
+            <li key={block.blockId} className={`checkin-item ${moved?.has(block.topicId) ? 'block-moved' : ''}`}>
               <div className="checkin-title">
                 <strong>{block.courseName}</strong>: {block.topicName} <span className="muted">({formatHours(block.hours)})</span>
               </div>
@@ -156,7 +156,7 @@ export default function CheckInControls({ day, today, onPlanChange }) {
             <strong>No worries, it happens.</strong> What would you like to do about the {formatHours(unfinished.reduce((s, b) => s + hoursLeft(b), 0))} that is still open?
           </p>
           <div className="button-row">
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={() => setNote('Replanning arrives in the next step of the build.')}>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={onReplan}>
               Replan
             </button>
             <button type="button" className="btn btn-quiet" disabled={busy} onClick={handleMoveForward}>

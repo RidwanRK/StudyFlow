@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { Plan, publicPlan } from '../models/Plan.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { HttpError } from '../middleware/errorHandler.js';
-import { generatePlan } from '../planner/index.js';
+import { acceptReplan, generatePlan, rejectReplan, replanPlan } from '../planner/index.js';
 import { applyCheckin, hasUnfinished } from '../planner/checkin.js';
 import { isIsoDate, serverToday } from '../lib/dates.js';
 
@@ -79,6 +79,29 @@ router.post('/move-forward', async (req, res) => {
   if (!hasUnfinished(day.blocks)) throw new HttpError(400, 'Everything on this day is done, so there is nothing to move forward.');
   day.resolution = 'moved_forward';
   await plan.save();
+  res.json({ plan: publicPlan(plan) });
+});
+
+// Replan: Gemini proposes a new arrangement of the days still to come. Nothing changes until the student accepts.
+router.post('/replan', async (req, res) => {
+  const { today, reason, fitChoice } = z
+    .object({
+      today: todayField,
+      reason: z.enum(['fell_behind', 'edit']).optional(),
+      fitChoice: z.enum(['daily', 'extra_days', 'keep']).optional(),
+    })
+    .parse(req.body ?? {});
+  const result = await replanPlan({ userId: req.userId, today: today ?? serverToday(), reason, fitChoice });
+  res.json(result);
+});
+
+router.post('/replan/accept', async (req, res) => {
+  const plan = await acceptReplan({ userId: req.userId });
+  res.json({ plan: publicPlan(plan) });
+});
+
+router.post('/replan/reject', async (req, res) => {
+  const plan = await rejectReplan({ userId: req.userId });
   res.json({ plan: publicPlan(plan) });
 });
 

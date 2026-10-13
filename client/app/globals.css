@@ -870,3 +870,191 @@ h3 {
   background: var(--warm-soft);
   border: 1px solid var(--warm);
 }
+
+/* ---------- replan proposal ---------- */
+.proposal {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.proposal-lighter {
+  padding: 12px 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 12px;
+}
+
+.moves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.move {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 14px;
+}
+
+.move-dates {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  color: var(--accent-strong);
+}
+
+.move-from {
+  text-decoration: line-through;
+  text-decoration-color: var(--muted);
+  color: var(--muted);
+}
+
+.move-reason {
+  font-style: italic;
+}
+
+.proposed-days summary {
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  color: var(--accent-strong);
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+.proposed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+}
+
+.proposed-day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Blocks that a replan moved or added get a soft highlight and a gentle fade-in */
+.block-moved {
+  background: var(--warm-soft) !important;
+  box-shadow: inset 4px 0 0 var(--warm);
+  animation: settle 0.9s ease both;
+}
+
+@keyframes settle {
+  from {
+    transform: translateY(-6px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block-moved {
+    animation: none;
+  }
+}
+
+/* ---------- replan proposal ---------- */
+.proposal {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.proposal-lighter {
+  padding: 12px 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 12px;
+}
+
+.moves {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.move {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 14px;
+}
+
+.move-dates {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  color: var(--accent-strong);
+}
+
+.move-from {
+  text-decoration: line-through;
+  text-decoration-color: var(--muted);
+  color: var(--muted);
+}
+
+.move-reason {
+  font-style: italic;
+}
+
+.proposed-days summary {
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  color: var(--accent-strong);
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+.proposed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+}
+
+.proposed-day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Blocks that a replan moved or added get a soft highlight and a gentle settle-in */
+.block-moved {
+  background: var(--warm-soft) !important;
+  box-shadow: inset 4px 0 0 var(--warm);
+  animation: settle 0.9s ease both;
+}
+
+@keyframes settle {
+  from {
+    transform: translateY(-6px);
+    opacity: 0.4;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block-moved {
+    animation: none;
+  }
+}

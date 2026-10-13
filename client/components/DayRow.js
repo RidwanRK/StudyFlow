@@ -6,11 +6,12 @@ import CheckInControls from './CheckInControls';
 import RemainingAlert from './RemainingAlert';
 
 // One day of the plan: a collapsed row that opens into that day's hour blocks.
-export default function DayRow({ day, today, onPlanChange, defaultOpen = false, isToday = false, isPast = false }) {
+export default function DayRow({ day, today, onPlanChange, onReplan, highlight, defaultOpen = false, isToday = false, isPast = false }) {
   const [open, setOpen] = useState(defaultOpen);
   const total = day.blocks.reduce((sum, b) => sum + b.hours, 0);
   const examOnly = day.blocks.length === 0 && day.exams.length > 0;
   const canCheckIn = day.blocks.length > 0 && day.date <= today;
+  const movedHere = highlight?.get(day.date);
   const allDone = day.blocks.length > 0 && day.blocks.every((b) => b.status === 'completed');
 
   return (
@@ -37,11 +38,11 @@ export default function DayRow({ day, today, onPlanChange, defaultOpen = false, 
             <>
               <RemainingAlert day={day} />
               {canCheckIn ? (
-                <CheckInControls key={JSON.stringify(day.blocks.map((b) => [b.blockId, b.status, b.hoursStudied, b.needsMoreTime]))} day={day} today={today} onPlanChange={onPlanChange} />
+                <CheckInControls key={JSON.stringify(day.blocks.map((b) => [b.blockId, b.status, b.hoursStudied, b.needsMoreTime]))} day={day} today={today} onPlanChange={onPlanChange} onReplan={onReplan} moved={movedHere} />
               ) : (
                 <ul className="blocks">
                   {day.blocks.map((block) => (
-                    <li key={block.blockId} className="block">
+                    <li key={block.blockId} className={`block ${movedHere?.has(block.topicId) ? 'block-moved' : ''}`}>
                       <span>
                         <strong>{block.courseName}</strong>: {block.topicName}
                       </span>
