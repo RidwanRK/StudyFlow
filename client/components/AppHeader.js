@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
@@ -14,7 +15,9 @@ export default function AppHeader() {
 
   return (
     <header className="app-header">
-      <span className="brand">StudyFlow</span>
+      <Link href="/" className="brand">
+        StudyFlow
+      </Link>
       {user && (
         <span className="header-right">
           <span className="who">Hi, {user.username}</span>

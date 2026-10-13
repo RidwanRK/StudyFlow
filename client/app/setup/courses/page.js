@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { localToday } from '@/lib/dates';
 import AppHeader from '@/components/AppHeader';
 import CourseEditor from '@/components/CourseEditor';
 import Notice from '@/components/Notice';
@@ -14,7 +16,9 @@ export default function CoursesPage() {
   const router = useRouter();
   const [courses, setCourses] = useState(null);
   const [error, setError] = useState('');
-  const [note, setNote] = useState('');
+  const [hasPlan, setHasPlan] = useState(false);
+  const [building, setBuilding] = useState(false);
+  const [buildError, setBuildError] = useState('');
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -25,6 +29,9 @@ export default function CoursesPage() {
     api('/courses')
       .then(({ courses: list }) => setCourses(list))
       .catch((err) => setError(err.message));
+    api('/plan')
+      .then(({ plan }) => setHasPlan(Boolean(plan)))
+      .catch(() => {});
   }, [user]);
 
   if (loading || !user) {
@@ -36,6 +43,19 @@ export default function CoursesPage() {
   }
 
   const ready = (courses ?? []).some((c) => c.topics.length > 0);
+  async function handleGenerate() {
+    if (hasPlan && !window.confirm('This builds a fresh plan and replaces your current one, including any check-ins. Continue?')) return;
+    setBuildError('');
+    setBuilding(true);
+    try {
+      await api('/plan/generate', { method: 'POST', body: { today: localToday() } });
+      router.push('/plan');
+    } catch (err) {
+      setBuildError(err.message);
+      setBuilding(false);
+    }
+  }
+
   const sortByExam = (list) => [...list].sort((a, b) => a.examDate.localeCompare(b.examDate));
 
   return (
@@ -64,11 +84,17 @@ export default function CoursesPage() {
           {courses !== null && <CourseEditor key={`new-${courses.length}`} onSaved={(saved) => setCourses((list) => sortByExam([...list, saved]))} />}
 
           <div className="card stack generate-card">
-            <button type="button" className="btn btn-primary" disabled={!ready} onClick={() => setNote('Plan building arrives in the next step of the build.')}>
-              Generate plan
+            <button type="button" className="btn btn-primary" disabled={!ready || building} onClick={handleGenerate}>
+              {building ? 'Building your plan…' : hasPlan ? 'Rebuild my plan' : 'Generate plan'}
             </button>
+            {building && <p className="muted center">This can take a few seconds while we lay out your days.</p>}
             {!ready && <p className="muted">Add a course with at least one topic to build your plan.</p>}
-            <Notice>{note}</Notice>
+            {hasPlan && !building && (
+              <Link href="/plan" className="muted center">
+                Back to my current plan
+              </Link>
+            )}
+            <Notice tone="error">{buildError}</Notice>
           </div>
         </div>
       </main>

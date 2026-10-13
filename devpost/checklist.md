@@ -39,7 +39,7 @@ Build mode: fast (from saved preference; switch any time)
   Learner check: Set weekday hours, weekend hours and a Sunday override; add two courses with three topics each; refresh and sign out and in; confirm everything is still filled in. Check the forms on a narrow window or your phone.
   Commit: `Add study hours and courses setup`
 
-- [ ] **4. You can click Generate plan and get an AI-built day-by-day timetable that the server has checked**
+- [x] **4. You can click Generate plan and get an AI-built day-by-day timetable that the server has checked**
   Becomes usable: With hours that fit, Generate plan shows "Building your plan…", then `/plan` lists the days up to the last exam. Each day is collapsed and opens into hour blocks, today's row is open, and the plan is saved. Gemini does the planning; the server proves it respects the rules.
   Why now: This is the unique kernel (the AI timetable) and the learning question from the spec (asking an AI for structured data, then testing it with ordinary code). It is placed right after the inputs exist so the riskiest, most valuable piece gets feedback early.
   PRD ref: `prd.md > Plan generation`, `prd.md > The Core Journey` (steps 5-6), `prd.md > User stories and acceptance criteria` (day-by-day plan)
@@ -117,4 +117,8 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - Added `MONGODB_DB` (default `studyflow`) to the env settings — the connection string has no database name, so MongoDB would have silently used its default database `test`.
 - Added `server/scripts/check-services.js` (not in the spec's file tree) as the slice 1 proof.
 - Added `POST /api/auth/welcome-seen` (the spec only said "Continue marks hasSeenWelcome") and `AppHeader` with Sign out — the Welcome screen needed a route to save the flag, and signing out needed a visible control. `client/next.config.js` also sets `turbopack.root` and `agentRules: false` to silence a lockfile warning and keep generated agent files out of the repo.
+- Slice 4 also builds `fit.js` (`checkFit`, the arithmetic fit check) and `lib/dates.js` helpers early, so Generate never asks Gemini for an impossible plan. Until slice 5 adds the options panel, an unfit set returns a plain "needs about N more hours" message (HTTP 422) — a stand-in that slice 5 replaces with `needs_fit_choice`.
+- Plan days carry an `exams` list (names of courses with an exam that date) and the plan stores Gemini's short `note` — both for display only, added to the spec's Plan data model. The day list runs from today to the last exam day itself (shown as an "Exam day" row); blocks can only use days before that.
+- Gemini answers that are not valid JSON or break the shape are signalled with `InvalidAnswerError` so only unusable answers get the one validation retry; API failures (bad key, 404 model, rate limit) go straight to the friendly message and are logged on the server.
+- Topic ids stay the same when a course is edited (the course save accepts each topic's existing id), because saved plan blocks refer to topics by id — the spec said saving "replaces its topics list", which would have orphaned blocks.
 

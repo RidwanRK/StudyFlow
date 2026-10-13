@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 
-// Decides where the student belongs: login, welcome, hours, courses (later slices add the plan).
+// Decides where the student belongs: login, welcome, hours, courses (plan once it exists).
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -21,11 +21,12 @@ export default function Home() {
       return;
     }
     let cancelled = false;
-    Promise.all([api('/setup'), api('/courses')])
-      .then(([{ setup }, { courses }]) => {
+    Promise.all([api('/setup'), api('/plan')])
+      .then(([{ setup }, { plan }]) => {
         if (cancelled) return;
         if (!setup) router.replace('/setup/hours');
-        else router.replace('/setup/courses');
+        else if (!plan) router.replace('/setup/courses');
+        else router.replace('/plan');
       })
       .catch(() => !cancelled && router.replace('/setup/hours'));
     return () => {

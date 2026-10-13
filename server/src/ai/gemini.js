@@ -2,6 +2,9 @@ import { GoogleGenAI } from '@google/genai';
 import { config } from '../config.js';
 import { scheduleJsonSchema, scheduleSchema } from './schema.js';
 
+// Gemini answered, but not with usable JSON in the expected shape. The planner may try once more.
+export class InvalidAnswerError extends Error {}
+
 const ai = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
 
 // Busy (503), rate-limited (429) and server errors (500) are usually temporary, so wait and try again.
@@ -45,7 +48,11 @@ export async function requestSchedule({ instructions, input }) {
   try {
     json = JSON.parse(response.text);
   } catch {
-    throw new Error(`Gemini did not return valid JSON: ${String(response.text).slice(0, 200)}`);
+    throw new InvalidAnswerError(`Gemini did not return valid JSON: ${String(response.text).slice(0, 200)}`);
   }
-  return scheduleSchema.parse(json);
+  const parsed = scheduleSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new InvalidAnswerError(`Gemini's JSON did not match the expected shape: ${parsed.error.issues[0]?.message}`);
+  }
+  return parsed.data;
 }

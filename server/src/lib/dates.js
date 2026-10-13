@@ -31,3 +31,10 @@ export function addDays(isoDate, n) {
 
 // ISO dates compare correctly as plain strings.
 export const isBefore = (a, b) => a < b;
+
+// Every date from start to end, both included.
+export function eachDay(startIso, endIso) {
+  const days = [];
+  for (let d = startIso; d <= endIso; d = addDays(d, 1)) days.push(d);
+  return days;
+}
