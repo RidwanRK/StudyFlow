@@ -4,7 +4,11 @@
   "private": true,
   "description": "StudyFlow: an AI study planner that replans when you fall behind.",
   "scripts": {
-    "install:all": "npm install && npm install --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "dev": "concurrently -n server,client -c green,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "check:services": "npm run check:services --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
   }
 }

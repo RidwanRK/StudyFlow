@@ -19,7 +19,7 @@ Build mode: fast (from saved preference; switch any time)
   Learner check: Put your MongoDB string and Gemini key into `server/.env`, run `npm run check:services`, and tell me whether you see two green lines (database connected, Gemini replied with valid JSON).
   Commit: `Scaffold server and verify MongoDB and Gemini connections`
 
-- [ ] **2. You can register, sign in, see the Welcome message, and stay signed in**
+- [x] **2. You can register, sign in, see the Welcome message, and stay signed in**
   Becomes usable: Open `localhost:3000`, register, see Welcome once, continue to an empty setup page, refresh and stay signed in, sign out and back in without seeing Welcome again. Wrong password and taken usernames show friendly messages. The website has its playful, calm look from here on.
   Why now: Every later behavior belongs to a signed-in student, and this brings up the second program (Next.js) with the `/api` proxy and the cookie, so everything after has a home to land in. It also sets the global look (palette, Fredoka and Nunito) once.
   PRD ref: `prd.md > Account`, `prd.md > The Core Journey` (steps 1-2), `prd.md > States and Boundaries` (First use, Login problems, Permissions), `prd.md > Look and Feel`
@@ -116,4 +116,5 @@ Activity mode: [live app and editor, explicit static fallback, focused alternati
 - The Gemini client retries busy and rate-limit errors (429, 500, 503) up to 4 times with a growing wait — Gemini returned temporary 503s, which would otherwise break a live demo. This is in addition to the one validation retry in the spec.
 - Added `MONGODB_DB` (default `studyflow`) to the env settings — the connection string has no database name, so MongoDB would have silently used its default database `test`.
 - Added `server/scripts/check-services.js` (not in the spec's file tree) as the slice 1 proof.
+- Added `POST /api/auth/welcome-seen` (the spec only said "Continue marks hasSeenWelcome") and `AppHeader` with Sign out — the Welcome screen needed a route to save the flag, and signing out needed a visible control. `client/next.config.js` also sets `turbopack.root` and `agentRules: false` to silence a lockfile warning and keep generated agent files out of the repo.
 
