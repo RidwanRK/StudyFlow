@@ -109,10 +109,10 @@ Carried from `prd.md > Look and Feel`: playful but soothing, restrained color, p
 
 - **Palette (a starting point, adjustable):** warm off-white background `#f6f4ee`, white cards, deep slate-green text `#2b3a3a`, one sage accent `#5b9a8b`, one soft warm highlight `#e9a96b` used sparingly for "what moved" and gentle alerts. No red anywhere, because stressed students should not see alarm colors. The same tokens are used in the PRD page.
 - **Type:** Fredoka for headings and buttons, Nunito for body text.
-- **Density:** spacious and calm. Large tap targets (at least 44px) because it must work on a phone. Single column on mobile, centered column with a maximum width on desktop.
+- **Density:** spacious and calm. Large tap targets (at least 44px) because it must work on a phone. Single column on mobile; on desktop the app uses the full screen width (multi-column layouts), as the PRD requires.
 - **Copy tone:** reassuring and never guilt-inducing. Examples: "No worries, let's find a new rhythm." and "You may not cover everything, and that's okay. Start with these, they matter most."
 - **Motion:** gentle. Day rows expand with a short ease. Moved blocks in a replan proposal get a soft highlight.
-- **Responsive:** one layout that stretches from phone to desktop. The only difference is width.
+- **Responsive:** one layout that stretches from phone to desktop. On wide screens the layout uses multiple columns to fill the screen.
 - Light theme only. Dark mode is not needed for the POC.
 
 ## Components

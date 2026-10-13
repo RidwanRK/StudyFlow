@@ -51,18 +51,20 @@ export default function PlanPage() {
           {plan === undefined && !error && <p className="muted center">Loading…</p>}
 
           {plan && (
-            <>
-              <div className="card stack plan-summary">
-                <p>{plan.note}</p>
-                <p className="muted">
-                  {formatHours(totalHours)} of studying across {studyDays} {studyDays === 1 ? 'day' : 'days'}. Tap a day to open it.
-                </p>
-              </div>
+            <div className="plan-layout">
+              <aside className="plan-side">
+                <div className="card stack plan-summary">
+                  <p>{plan.note}</p>
+                  <p className="muted">
+                    {formatHours(totalHours)} of studying across {studyDays} {studyDays === 1 ? 'day' : 'days'}. Tap a day to open it.
+                  </p>
+                </div>
+                <Link href="/setup/courses" className="btn btn-quiet align-start link-btn">
+                  Edit courses or rebuild the plan
+                </Link>
+              </aside>
               <DayList days={plan.days} />
-              <Link href="/setup/courses" className="btn btn-quiet align-start link-btn">
-                Edit courses or rebuild the plan
-              </Link>
-            </>
+            </div>
           )}
         </div>
       </main>

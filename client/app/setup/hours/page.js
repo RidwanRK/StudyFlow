@@ -26,7 +26,7 @@ export default function HoursPage() {
   return (
     <>
       <AppHeader />
-      <main className="page page-narrow">
+      <main className="page">
         <SetupNav current="hours" />
         <HoursForm />
       </main>

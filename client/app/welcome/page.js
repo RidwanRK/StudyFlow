@@ -36,22 +36,31 @@ export default function WelcomePage() {
   }
 
   return (
-    <main className="page page-narrow">
-      <div className="card stack">
-        <h1>Welcome, {user.username}</h1>
-        <p>
+    <main className="auth-layout">
+      <section className="auth-hero">
+        <h1 className="hero-title">Welcome, {user.username}</h1>
+        <p className="lead">
           Exams are easier when you know exactly what to study today. Tell StudyFlow your courses, your exam dates and how
           many hours you can study, and it will build a day-by-day plan for you.
         </p>
-        <p>
-          And when a day doesn&apos;t go the way you hoped, that&apos;s okay. Tell us what you got done, and StudyFlow will
-          suggest a new rhythm, showing you what moved and why, so you stay in charge.
-        </p>
-        <Notice tone="error">{error}</Notice>
-        <button type="button" className="btn btn-primary" onClick={handleStart} disabled={busy}>
-          {busy ? 'One moment…' : "Let's start"}
-        </button>
-      </div>
+      </section>
+      <section className="auth-panel">
+        <div className="card stack">
+          <h2>How it works</h2>
+          <ul className="auth-points">
+            <li>You tell us your hours and your courses.</li>
+            <li>We build a plan that fits your exams.</li>
+            <li>
+              When a day doesn&apos;t go the way you hoped, that&apos;s okay. Tell us what you got done, and StudyFlow suggests a
+              new rhythm, showing you what moved and why, so you stay in charge.
+            </li>
+          </ul>
+          <Notice tone="error">{error}</Notice>
+          <button type="button" className="btn btn-primary" onClick={handleStart} disabled={busy}>
+            {busy ? 'One moment…' : "Let's start"}
+          </button>
+        </div>
+      </section>
     </main>
   );
 }

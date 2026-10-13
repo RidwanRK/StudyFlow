@@ -72,6 +72,7 @@ export default function CoursesPage() {
           <Notice tone="error">{error}</Notice>
           {courses === null && !error && <p className="muted center">Loading…</p>}
 
+          <div className="course-grid">
           {(courses ?? []).map((course) => (
             <CourseEditor
               key={course.id}
@@ -82,6 +83,7 @@ export default function CoursesPage() {
           ))}
 
           {courses !== null && <CourseEditor key={`new-${courses.length}`} onSaved={(saved) => setCourses((list) => sortByExam([...list, saved]))} />}
+          </div>
 
           <div className="card stack generate-card">
             <button type="button" className="btn btn-primary" disabled={!ready || building} onClick={handleGenerate}>
