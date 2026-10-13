@@ -646,3 +646,14 @@ h3 {
     display: none;
   }
 }
+
+.saved-note {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--accent-strong);
+}
+
+.push-right {
+  margin-left: auto;
+}
