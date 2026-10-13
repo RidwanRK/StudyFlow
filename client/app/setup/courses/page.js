@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
@@ -19,6 +19,12 @@ export default function CoursesPage() {
   const [hasPlan, setHasPlan] = useState(false);
   const [building, setBuilding] = useState(false);
   const [buildError, setBuildError] = useState('');
+  // Every course card registers here so Generate can save anything still pending first.
+  const registry = useRef(new Map());
+  const [newHasContent, setNewHasContent] = useState(false);
+  const handlePendingChange = useCallback((key, isPending) => {
+    if (key === 'new') setNewHasContent(isPending);
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -42,12 +48,20 @@ export default function CoursesPage() {
     );
   }
 
-  const ready = (courses ?? []).some((c) => c.topics.length > 0);
+  const ready = (courses ?? []).some((c) => c.topics.length > 0) || newHasContent;
   async function handleGenerate() {
     if (hasPlan && !window.confirm('This builds a fresh plan and replaces your current one, including any check-ins. Continue?')) return;
     setBuildError('');
     setBuilding(true);
     try {
+      // Save anything still in a form (a new course you haven't added yet, or edits you haven't saved).
+      for (const card of [...registry.current.values()].filter((c) => c.pending)) {
+        if (!(await card.save())) {
+          setBuildError('One of your courses needs a little more information first. Please check the message on that course.');
+          setBuilding(false);
+          return;
+        }
+      }
       await api('/plan/generate', { method: 'POST', body: { today: localToday() } });
       router.push('/plan');
     } catch (err) {
@@ -77,12 +91,15 @@ export default function CoursesPage() {
             <CourseEditor
               key={course.id}
               course={course}
+              registry={registry.current}
+              regKey={course.id}
+              onPendingChange={handlePendingChange}
               onSaved={(saved) => setCourses((list) => sortByExam(list.map((c) => (c.id === saved.id ? saved : c))))}
               onDeleted={(id) => setCourses((list) => list.filter((c) => c.id !== id))}
             />
           ))}
 
-          {courses !== null && <CourseEditor key={`new-${courses.length}`} onSaved={(saved) => setCourses((list) => sortByExam([...list, saved]))} />}
+          {courses !== null && <CourseEditor key={`new-${courses.length}`} registry={registry.current} regKey="new" onPendingChange={handlePendingChange} onSaved={(saved) => setCourses((list) => sortByExam([...list, saved]))} />}
           </div>
 
           <div className="card stack generate-card">
