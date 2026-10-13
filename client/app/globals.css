@@ -751,3 +751,122 @@ h3 {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ---------- check-in ---------- */
+.checkin {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.checkin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkin-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 14px;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.seg {
+  flex: 1 1 110px;
+  min-height: var(--tap);
+  padding: 8px 12px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 0.98rem;
+  cursor: pointer;
+}
+
+.seg-on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.partial-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.partial-row .field {
+  width: 150px;
+}
+
+.tick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+}
+
+.tick input {
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+.hours-left {
+  margin: 0;
+  color: var(--accent-strong);
+  font-family: var(--font-heading), system-ui, sans-serif;
+}
+
+.all-done {
+  color: var(--accent-strong);
+}
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 14px;
+}
+
+.remaining-alert {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+  border-radius: 14px;
+}
+
+.remaining-alert ul {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.chip-done {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: var(--accent-strong);
+}
+
+.chip-open {
+  background: var(--warm-soft);
+  border: 1px solid var(--warm);
+}

@@ -80,7 +80,7 @@ export default function PlanPage() {
                   Edit courses or rebuild the plan
                 </Link>
               </aside>
-              <DayList days={plan.days} />
+              <DayList days={plan.days} onPlanChange={setPlan} />
             </div>
           )}
         </div>
