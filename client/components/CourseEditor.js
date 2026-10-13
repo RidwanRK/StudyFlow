@@ -126,7 +126,7 @@ export default function CourseEditor({ course = null, onSaved, onDeleted, onCanc
       <div className="button-row">
         {isNew && (
           <button type="submit" className="btn btn-primary" disabled={busy}>
-            {busy ? 'Adding…' : 'Add course'}
+            {busy ? 'Saving…' : 'Save changes'}
           </button>
         )}
         {isNew && (
